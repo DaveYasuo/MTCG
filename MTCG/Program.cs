@@ -1,4 +1,5 @@
 ﻿using System;
+using DatabaseModule.PostgreSql;
 
 namespace MTCG
 {
@@ -7,6 +8,7 @@ namespace MTCG
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
+            DB newDb = new DB();
         }
     }
 }
