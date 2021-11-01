@@ -12,13 +12,6 @@ namespace DatabaseModule.PostgreSql
                 .AddJsonFile("appsettings.json")
                 .AddUserSecrets<ConnectionString>()
                 .Build();
-            //string host = _config["Host"];
-            //string username = _config["Username"];
-            //string password = _config["Password"];
-            //string database = _config["Database"];
-            //string includeErrorDetail = _config["Include Error Detail"];
-            //Console.WriteLine(config.GetConnectionString("DefaultDB"););
-            //$"Host={host};Username={username};Password{password};Database={database};Include Error Detail={includeErrorDetail}";
             return config.GetConnectionString("DefaultDB");
         }
 
@@ -26,13 +19,18 @@ namespace DatabaseModule.PostgreSql
     public class DB
     {
         private static readonly string Cs = new ConnectionString().OnGet();
-        public static NpgsqlConnection Connection { get; }
-        public static NpgsqlCommand Command { get; set; }
+        private static NpgsqlConnection Connection { get; }
+        private static NpgsqlCommand Command { get; set; }
         static DB()
         {
-            Connection = new NpgsqlConnection(Cs); ;
+            Connection = new NpgsqlConnection(Cs);
             Connection.Open();
             PrintVersion();
+        }
+
+        public static NpgsqlConnection GetConnection()
+        {
+            return Connection;
         }
         public static void PrintVersion()
         {

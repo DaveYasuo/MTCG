@@ -12,9 +12,11 @@ namespace BusinessLogic
          * Alle Funktionen betreffend Abfrage wird hier eingefügt.
          **/
         private static NpgsqlCommand Command { get; set; }
-        public static NpgsqlConnection Connection { get; }
+        public static NpgsqlConnection Connection { get; set; }
+
         public DataHandler()
         {
+            Connection = DB.GetConnection();
         }
         public static void InsertUser(User user)
         {

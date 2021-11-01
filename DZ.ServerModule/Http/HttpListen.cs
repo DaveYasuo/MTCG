@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using BusinessLogic;
 
 namespace ServerModule.Http
 {
@@ -8,7 +10,7 @@ namespace ServerModule.Http
     {
         public static void HttpTask()
         {
-
+            HttpClient client = new HttpClient();
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add("http://localhost:10001/");
             listener.Start();
@@ -27,7 +29,7 @@ namespace ServerModule.Http
                 //Console.WriteLine(request.RawUrl);
                 string data = new StreamReader(context.Request.InputStream).ReadToEnd();
                 //Console.WriteLine(data);
-                PrintData(data, request.RawUrl);
+                RequestHandler.PrintData(data, request.RawUrl);
 
                 // Obtain a response object.
                 HttpListenerResponse response = context.Response;
