@@ -12,7 +12,7 @@ namespace MTCG
             Console.WriteLine("Hello World!");
             DB newDb = new DB();
             Task<TcpListen> listenTask = TcpListen.TcpTask();
-            TcpListen newTcp = await listenTask;
+            await listenTask;
             Console.WriteLine("Listen is ready");
         }
     }

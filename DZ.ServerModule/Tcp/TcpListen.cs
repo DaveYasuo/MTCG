@@ -34,29 +34,24 @@ namespace ServerModule.Tcp
 
         public static async Task<TcpListen> TcpTask()
         {
-            TcpListener listener = new TcpListener(IPAddress.Loopback, 10001);
-            listener.Start(5);
-
+            TcpListener server = new TcpListener(IPAddress.Loopback, 10001);
+            server.Start(5);
             Console.CancelKeyPress += (sender, e) => Environment.Exit(0);
 
             while (true)
             {
                 try
                 {
-                    var socket = await listener.AcceptTcpClientAsync();
-                    await using var writer = new StreamWriter(socket.GetStream()) { AutoFlush = true };
+                    //Task<TcpClient> socket = listener.AcceptTcpClientAsync();
+                    //Task.WaitAny(socket);
+                    //TcpClient server = socket.Result;
+                    using TcpClient client = await Task.Run(() => server.AcceptTcpClientAsync());
+                    await using StreamWriter writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
                     await writer.WriteLineAsync("Welcome to my server!");
-                    byte[] data = new byte[1024];
-                    string message;
-                    do
-                    {
-                        await using NetworkStream reader = socket.GetStream();
-                        Console.WriteLine("received1: " + ToString(reader));
-                        reader.Read(data);
-                        message = Encoding.ASCII.GetString(data);
-                        Console.WriteLine("received1: " + message);
-                        await writer.WriteLineAsync("Thank you, next! ...");
-                    } while (message != "quit");
+                    await using NetworkStream reader = client.GetStream();
+                    string message = ToString(reader);
+                    Console.WriteLine($"received: {message}");
+                    await writer.WriteLineAsync("\nThank you, next! ...");
                 }
                 catch (Exception exc)
                 {
@@ -66,12 +61,11 @@ namespace ServerModule.Tcp
         }
         public static string ToString(NetworkStream stream)
         {
-            MemoryStream memoryStream = new MemoryStream();
-            byte[] data = new byte[256];
-            int size;
+            using MemoryStream memoryStream = new MemoryStream();
+            byte[] data = new byte[1024];
             do
             {
-                size = stream.Read(data, 0, data.Length);
+                int size = stream.Read(data, 0, data.Length);
                 if (size == 0)
                 {
                     Console.WriteLine("client disconnected...");
