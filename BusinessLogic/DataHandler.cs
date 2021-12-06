@@ -1,6 +1,7 @@
 ﻿using Data.Cards;
 using Data.Users;
 using DatabaseModule.PostgreSql;
+using DebugAndTrace;
 using Npgsql;
 
 namespace BusinessLogic
@@ -11,14 +12,17 @@ namespace BusinessLogic
          * Datenbank Abfrage wird hier durchgeführt. Die Connection sollte mithilfe des DatabaseModule hergestellt werden.
          * Alle Funktionen betreffend Abfrage wird hier eingefügt.
          **/
-        private static NpgsqlCommand Command { get; set; }
-        public static NpgsqlConnection Connection { get; set; }
+        private NpgsqlCommand Command { get; set; }
+        public NpgsqlConnection Connection { get; set; }
+        private IPrinter Printer { get; set; }
 
-        public DataHandler()
+        public DataHandler(IPrinter printer)
         {
-            Connection = DB.GetConnection();
+            Printer = printer;
+            Db newDb = new Db(printer);
+            Connection = newDb.GetConnection();
         }
-        public static void InsertUser(User user)
+        public void InsertUser(User user)
         {
             Command = new NpgsqlCommand();
             Command.Connection = Connection;
@@ -27,10 +31,10 @@ namespace BusinessLogic
             Command.Parameters.AddWithValue("name", user.Username);
             Command.Parameters.AddWithValue("password", user.Password);
             Command.Prepare();
-            Command.ExecuteNonQuery();
+            Printer.WriteLine(Command.ExecuteNonQuery());
         }
 
-        public static void InsertPackage(Package package)
+        public void InsertPackage(Package package)
         {
             Command = new NpgsqlCommand();
             Command.Connection = Connection;

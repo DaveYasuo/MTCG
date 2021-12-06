@@ -7,7 +7,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DatabaseModule\DatabaseModule.csproj" />
-    <ProjectReference Include="..\DZ.ServerModule\ServerModule.csproj" />
+    <ProjectReference Include="..\DebugAndTrace\DebugAndTrace.csproj" />
+    <ProjectReference Include="..\ServerModule\ServerModule.csproj" />
   </ItemGroup>
 
 </Project>

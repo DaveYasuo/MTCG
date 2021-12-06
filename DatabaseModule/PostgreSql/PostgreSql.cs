@@ -1,4 +1,5 @@
 ﻿using System;
+using DebugAndTrace;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 
@@ -6,7 +7,7 @@ namespace DatabaseModule.PostgreSql
 {
     public class ConnectionString
     {
-        public string OnGet()
+        public static string OnGet()
         {
             var config = new ConfigurationBuilder().SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile("appsettings.json")
@@ -16,35 +17,36 @@ namespace DatabaseModule.PostgreSql
         }
 
     }
-    public class DB
+    public class Db
     {
-        private static readonly string Cs = new ConnectionString().OnGet();
-        private static NpgsqlConnection Connection { get; }
-        private static NpgsqlCommand Command { get; set; }
-        static DB()
+        private readonly IPrinter _printer;
+        private readonly NpgsqlConnection _connection;
+        private NpgsqlCommand Command { get; set; }
+        public Db(IPrinter printer)
         {
-            Connection = new NpgsqlConnection(Cs);
-            Connection.Open();
-            PrintVersion();
+            _printer = printer;
+            string connString = ConnectionString.OnGet();
+            _connection = new NpgsqlConnection(connString);
+            _connection.Open();
         }
 
-        public static NpgsqlConnection GetConnection()
+        public NpgsqlConnection GetConnection()
         {
-            return Connection;
+            return _connection;
         }
-        public static void PrintVersion()
+        public void PrintVersion()
         {
             Command = new NpgsqlCommand();
-            Command.Connection = Connection;
-            string sql = "SELECT version()";
+            Command.Connection = _connection;
+            const string sql = "SELECT version()";
             Command.CommandText = sql;
             string version = Command.ExecuteScalar()?.ToString();
-            Console.WriteLine($"PostgreSQL version: {version}");
+            _printer.WriteLine($"PostgreSQL version: {version}");
         }
 
-        ~DB()
+        ~Db()
         {
-            Connection.Close();
+            _connection.Close();
         }
     }
 }
