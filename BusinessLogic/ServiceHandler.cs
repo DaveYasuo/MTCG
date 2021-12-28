@@ -29,11 +29,11 @@ namespace BusinessLogic
         }
         private readonly Dictionary<Enum, char> _separators = new Dictionary<Enum, char>() { { Chars.WhiteSpace, ' ' }, { Chars.NewLine, '\n' } };
 
-        public void Handle(string message)
+        public string Handle(string message)
         {
             List<string> httpRequestParts = new List<string>(message.Split(_separators[Chars.NewLine]));
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            Console.WriteLine(httpRequestParts.Count);
+            // Console.WriteLine(httpRequestParts.Count);
             // prüfen ob der Request genug Information enthält
             if (httpRequestParts.Count >= 3)
             {
@@ -44,6 +44,8 @@ namespace BusinessLogic
 
                 httpRequestParts.RemoveRange(0, 3);
             }
+
+            return null; // todo
         }
     }
 }

@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Dynamic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DebugAndTrace
 {
-    //public IPrinter Printer { get; }
     public interface IPrinter
     {
         void WriteLine(object text);
@@ -27,6 +21,13 @@ namespace DebugAndTrace
         public void WriteLine(object text)
         {
             Console.WriteLine(text);
+        }
+    }
+    public class TracePrinter : IPrinter
+    {
+        public void WriteLine(object text)
+        {
+            Trace.WriteLine(text);
         }
     }
 }

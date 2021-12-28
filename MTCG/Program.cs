@@ -20,8 +20,8 @@ namespace MTCG
             printer.WriteLine("Hello World!");
             Db newDb = new Db(new ConsolePrinter());
             newDb.PrintVersion();
-            TcpListen runClientTcpListen = new TcpListen(new DebugPrinter());
-            await runClientTcpListen.TcpTask();
+            TcpListen serverListen = new TcpListen(new DebugPrinter());
+            await serverListen.StartServer();
             printer.WriteLine("Hello Afterlife!");
         }
     }
