@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ServerModule.Sockets
 {
-    class SocketListen
+    class SocketServer
     {
         private static void StartServer()
         {

@@ -6,7 +6,7 @@ using BusinessLogic;
 
 namespace ServerModule.Http
 {
-    public class HttpListen
+    public class HttpServer
     {
         public static void HttpTask()
         {
