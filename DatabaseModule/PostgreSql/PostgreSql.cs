@@ -20,33 +20,33 @@ namespace DatabaseModule.PostgreSql
     public class Db
     {
         private readonly IPrinter _printer;
-        private readonly NpgsqlConnection _connection;
-        private NpgsqlCommand Command { get; set; }
+        private NpgsqlConnection Connection { get; }
+
         public Db(IPrinter printer)
         {
             _printer = printer;
             string connString = ConnectionString.OnGet();
-            _connection = new NpgsqlConnection(connString);
-            _connection.Open();
+            Connection = new NpgsqlConnection(connString);
+            Connection.Open();
         }
 
         public NpgsqlConnection GetConnection()
         {
-            return _connection;
+            return Connection;
         }
         public void PrintVersion()
         {
-            Command = new NpgsqlCommand();
-            Command.Connection = _connection;
+            NpgsqlCommand command = new NpgsqlCommand();
+            command.Connection = Connection;
             const string sql = "SELECT version()";
-            Command.CommandText = sql;
-            string version = Command.ExecuteScalar()?.ToString();
+            command.CommandText = sql;
+            string version = command.ExecuteScalar()?.ToString();
             _printer.WriteLine($"PostgreSQL version: {version}");
         }
 
         ~Db()
         {
-            _connection.Close();
+            Connection.Close();
         }
     }
 }

@@ -12,39 +12,38 @@ namespace BusinessLogic
          * Datenbank Abfrage wird hier durchgeführt. Die Connection sollte mithilfe des DatabaseModule hergestellt werden.
          * Alle Funktionen betreffend Abfrage wird hier eingefügt.
          **/
-        private NpgsqlCommand Command { get; set; }
         public NpgsqlConnection Connection { get; set; }
-        private IPrinter Printer { get; set; }
+        private readonly IPrinter _printer;
 
         public DataHandler(IPrinter printer)
         {
-            Printer = printer;
-            Db newDb = new Db(printer);
-            Connection = newDb.GetConnection();
+            _printer = printer;
+            Db db = new Db(printer);
+            Connection = db.GetConnection();
         }
         public void InsertUser(User user)
         {
-            Command = new NpgsqlCommand();
-            Command.Connection = Connection;
-            string sql = "INSERT INTO users(name,password) VALUES(@name,@password)";
-            Command.CommandText = sql;
-            Command.Parameters.AddWithValue("name", user.Username);
-            Command.Parameters.AddWithValue("password", user.Password);
-            Command.Prepare();
-            Printer.WriteLine(Command.ExecuteNonQuery());
+            NpgsqlCommand command = new NpgsqlCommand();
+            command.Connection = Connection;
+            const string sql = "INSERT INTO users(name,password) VALUES(@name,@password)";
+            command.CommandText = sql;
+            command.Parameters.AddWithValue("name", user.Username);
+            command.Parameters.AddWithValue("password", user.Password);
+            command.Prepare();
+            _printer.WriteLine(command.ExecuteNonQuery());
         }
 
         public void InsertPackage(Package package)
         {
-            Command = new NpgsqlCommand();
-            Command.Connection = Connection;
-            string sql = "INSERT INTO package(id,name,damage) VALUES(@id,@name,@damage)";
-            Command.CommandText = sql;
-            Command.Parameters.AddWithValue("id", package.Id);
-            Command.Parameters.AddWithValue("name", package.Name);
-            Command.Parameters.AddWithValue("damage", package.Damage);
-            Command.Prepare();
-            Command.ExecuteNonQuery();
+            NpgsqlCommand command = new NpgsqlCommand();
+            command.Connection = Connection;
+            const string sql = "INSERT INTO package(id,name,damage) VALUES(@id,@name,@damage)";
+            command.CommandText = sql;
+            command.Parameters.AddWithValue("id", package.Id);
+            command.Parameters.AddWithValue("name", package.Name);
+            command.Parameters.AddWithValue("damage", package.Damage);
+            command.Prepare();
+            command.ExecuteNonQuery();
         }
     }
 }
