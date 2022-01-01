@@ -7,26 +7,26 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BusinessLogic;
+using DatabaseModule;
 using DebugAndTrace;
 
 namespace ServerModule.Tcp
 {
-    public class TcpServer
+    public class TcpServer : IServer
     {
         private readonly IPrinter _printer;
         private readonly int _port = 10001;
         private readonly TcpListener _server;
-        private bool _listening;
-        private readonly ConcurrentDictionary<string, Task> _tasks;
-        private readonly CancellationTokenSource _tokenSource;
+        private bool _listening = true;
+        private readonly ConcurrentDictionary<string, Task> _tasks = new();
+        // Generate cancellation token
+        // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
+        private readonly CancellationTokenSource _tokenSource = new();
 
         public TcpServer(IPrinter printer)
         {
             _printer = printer;
             _server = new TcpListener(IPAddress.Loopback, _port);
-            _tasks = new ConcurrentDictionary<string, Task>();
-            _listening = true;
-            _tokenSource = new CancellationTokenSource();
         }
 
         public TcpServer(IPrinter printer, int port)
@@ -34,11 +34,6 @@ namespace ServerModule.Tcp
             _port = port;
             _printer = printer;
             _server = new TcpListener(IPAddress.Loopback, _port);
-            _tasks = new ConcurrentDictionary<string, Task>();
-            _listening = true;
-            // Generate cancellation token
-            // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
-            _tokenSource = new CancellationTokenSource();
         }
 
         /// <summary>
@@ -83,6 +78,8 @@ namespace ServerModule.Tcp
                 catch (Exception)
                 {
                     // ignored
+                    // Prevent SocketException when break
+                    // _printer.WriteLine($"Exc: {exception.Message}");
                 }
             }
         }
@@ -110,11 +107,11 @@ namespace ServerModule.Tcp
                     _printer.WriteLine($"Wait for Task {task.Id}");
                     _printer.WriteLine(task.Wait(500) ? "Task is complete" : "Task failed.");
                 }
-                catch (Exception exception)
+                catch (Exception)
                 {
-                    _printer.WriteLine($"Exc: {exception}");
                     // ignored
                     // Prevent TaskCanceledException
+                    // _printer.WriteLine($"Exc: {exception.Message}");
                 }
             }
 
@@ -133,7 +130,6 @@ namespace ServerModule.Tcp
             //_printer.WriteLine($"Task {Task.CurrentId} Sleeping");
             // await Task.Delay(5000); 
             //_printer.WriteLine($"Task {Task.CurrentId} Awaken");
-            ServiceHandler serviceHandler = new ServiceHandler();
             try
             {
                 await using StreamWriter writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
@@ -143,7 +139,7 @@ namespace ServerModule.Tcp
                 if (message == null) return;
                 _printer.WriteLine($"\n\nreceived:\n{message}");
                 // Here send the message to the ServiceHandler and back to client
-                await writer.WriteLineAsync(serviceHandler.Handle(message));
+                await writer.WriteLineAsync(new ServiceHandler().Handle(message));
             }
             catch (Exception exc)
             {

@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
@@ -41,10 +37,11 @@ namespace BusinessLogic
                 string httpMethod = metaData[0];
                 string rawUrl = metaData[1];
                 string httpVersion = metaData[2];
-
+                string data = null;
                 httpRequestParts.RemoveRange(0, 3);
+                RequestHandler requestHandler = new RequestHandler();
+                requestHandler.Handle(rawUrl, data);
             }
-
             return null; // todo
         }
     }

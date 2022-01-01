@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessLogic", "BusinessLo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DatabaseModule", "DatabaseModule\DatabaseModule.csproj", "{E63EB76B-9856-4089-871D-A767EF3107F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugAndTrace", "DebugAndTrace\DebugAndTrace.csproj", "{084339C1-7756-4C5D-98E4-E9554EC48F10}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugAndTrace", "DebugAndTrace\DebugAndTrace.csproj", "{084339C1-7756-4C5D-98E4-E9554EC48F10}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

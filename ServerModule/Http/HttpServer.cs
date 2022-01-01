@@ -29,7 +29,7 @@ namespace ServerModule.Http
                 //Console.WriteLine(request.RawUrl);
                 string data = new StreamReader(context.Request.InputStream).ReadToEnd();
                 //Console.WriteLine(data);
-                RequestHandler.PrintData(data, request.RawUrl);
+                new RequestHandler().Handle(request.RawUrl, data);
 
                 // Obtain a response object.
                 HttpListenerResponse response = context.Response;

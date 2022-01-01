@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,15 +10,15 @@ using Data.Users;
 
 namespace BusinessLogic
 {
-    public static class RequestHandler
+    public class RequestHandler
     {
         /**
          * Das ist die Logik.
          * Hier kommt eine switch-case.
          * Kommt drauf an, welche RawUrl, welche HTTP-Methode und welche Daten übergeben wurden.
-         * Vllt eine Instanz der DataHandler erstellen und die Queries als Resultat wieder zurückgeben.
+         * Vlt eine Instanz der DataHandler erstellen und die Queries als Resultat wieder zurückgeben.
          **/
-        public static void PrintData(string data, string url)
+        public string Handle(string url, string data)
         {
             switch (url)
             {
@@ -31,6 +32,8 @@ namespace BusinessLogic
                 case "/score": Console.WriteLine("leer"); break;
                 case "/tradings": Console.WriteLine("leer"); break;
             }
+
+            return null;
         }
     }
 }

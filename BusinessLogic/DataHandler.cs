@@ -1,5 +1,6 @@
 ﻿using Data.Cards;
 using Data.Users;
+using DatabaseModule.Docker;
 using DatabaseModule.PostgreSql;
 using DebugAndTrace;
 using Npgsql;
@@ -18,12 +19,12 @@ namespace BusinessLogic
         public DataHandler(IPrinter printer)
         {
             _printer = printer;
-            Db db = new Db(printer);
-            Connection = db.GetConnection();
+            PgDbConnect pgDbConnect = new PgDbConnect();
+            //Connection = pgDbConnect.GetConnection();
         }
         public void InsertUser(User user)
         {
-            NpgsqlCommand command = new NpgsqlCommand();
+            using NpgsqlCommand command = new NpgsqlCommand();
             command.Connection = Connection;
             const string sql = "INSERT INTO users(name,password) VALUES(@name,@password)";
             command.CommandText = sql;
@@ -35,7 +36,7 @@ namespace BusinessLogic
 
         public void InsertPackage(Package package)
         {
-            NpgsqlCommand command = new NpgsqlCommand();
+            using NpgsqlCommand command = new NpgsqlCommand();
             command.Connection = Connection;
             const string sql = "INSERT INTO package(id,name,damage) VALUES(@id,@name,@damage)";
             command.CommandText = sql;

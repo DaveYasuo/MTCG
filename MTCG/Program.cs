@@ -1,7 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
-using DatabaseModule.PostgreSql;
+﻿using DatabaseModule.PostgreSql;
 using DebugAndTrace;
+using Npgsql;
 using ServerModule.Tcp;
 
 namespace MTCG
@@ -18,11 +17,17 @@ namespace MTCG
         {
             IPrinter printer = new ConsolePrinter();
             printer.WriteLine("Hello World!");
-            Db newDb = new Db(new ConsolePrinter());
-            newDb.PrintVersion();
-            TcpServer server = new TcpServer(new ConsolePrinter(), 10001);
-            server.Start();
-            printer.WriteLine("Hello Afterlife!");
+
+            //Db newDb = new Db(new ConsolePrinter(), "localhost", "test", "test", "test");
+            PgDbConnect newPgDbConnect = new PgDbConnect();
+            newPgDbConnect.PrintVersion();
+            newPgDbConnect.Stop();
+            NpgsqlConnection connection = PgDbConnect.GetConnection();
+            new ConsolePrinter().WriteLine(new NpgsqlCommand("SELECT version()", connection).ExecuteScalar()?.ToString());
+
+            //TcpServer server = new TcpServer(new ConsolePrinter(), 10001);
+            //server.Start();
+            //printer.WriteLine("Hello Afterlife!");
         }
     }
 }
