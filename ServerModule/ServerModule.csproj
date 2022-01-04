@@ -5,11 +5,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include=".ignore\Http\HttpServer.cs" />
+    <Compile Include=".ignore\Sockets\SocketServer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+    <ProjectReference Include="..\DatabaseModule\DatabaseModule.csproj" />
+    <ProjectReference Include="..\Data\Data.csproj" />
+    <ProjectReference Include="..\DebugAndTrace\DebugAndTrace.csproj" />
   </ItemGroup>
 
 </Project>

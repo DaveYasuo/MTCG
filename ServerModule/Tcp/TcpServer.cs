@@ -1,40 +1,56 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BusinessLogic;
 using DatabaseModule;
 using DebugAndTrace;
+using ServerModule.SimpleLogic.Handler;
+using ServerModule.SimpleLogic.Mapping;
+using ServerModule.SimpleLogic.Requests;
+using ServerModule.SimpleLogic.Responses;
+using ServerModule.Tcp.Client;
+using ServerModule.Tcp.Listener;
 
 namespace ServerModule.Tcp
 {
     public class TcpServer : IServer
     {
+        private bool _listening;
         private readonly IPrinter _printer;
-        private readonly int _port = 10001;
-        private readonly TcpListener _server;
-        private bool _listening = true;
+        private readonly ITcpListener _server;
+        private readonly IMapping _mapping;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
-        // Generate cancellation token
-        // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
-        private readonly CancellationTokenSource _tokenSource = new();
+        private CancellationTokenSource _tokenSource;
 
-        public TcpServer(IPrinter printer)
+        public TcpServer(ITcpListener server, IPrinter printer, IMapping mapping)
         {
             _printer = printer;
-            _server = new TcpListener(IPAddress.Loopback, _port);
+            _mapping = mapping;
+            _server = server;
         }
 
-        public TcpServer(IPrinter printer, int port)
+        public TcpServer(ITcpListener server, IMapping mapping)
         {
-            _port = port;
-            _printer = printer;
-            _server = new TcpListener(IPAddress.Loopback, _port);
+            _printer = new ConsolePrinter();
+            _server = server;
+            _mapping = mapping;
         }
+
+        public TcpServer(ITcpListener server)
+        {
+            _printer = new ConsolePrinter();
+            _mapping = new Mapping();
+            _server = server;
+        }
+
+        public TcpServer()
+        {
+            _server = new TcpListener(10001);
+            _printer = new ConsolePrinter();
+            _mapping = new Mapping();
+        }
+
+        ~TcpServer() => Stop();
 
         /// <summary>
         /// Starts the server.
@@ -42,6 +58,11 @@ namespace ServerModule.Tcp
         /// </summary>
         public void Start()
         {
+            if (_listening) return;
+            _listening = true;
+            // Generate cancellation token
+            // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
+            _tokenSource = new CancellationTokenSource();
             _server.Start();
             Console.CancelKeyPress += (_, e) =>
             {
@@ -62,26 +83,47 @@ namespace ServerModule.Tcp
                     // Generate GUID
                     // See: https://stackoverflow.com/a/4421513/12347616
                     string id = Guid.NewGuid().ToString();
-                    TcpClient client = _server.AcceptTcpClient();
+                    ITcpClient client = _server.AcceptTcpClient();
                     //_printer.WriteLine($"Task {id} Waiting for complete");
-                    Task task = Task.Run(async () => await Process(client), token);
+                    Task task = Task.Run(() => Process(client), token);
                     _tasks[id] = task;
+                    _printer.WriteLine($"Task {id} added to the collection");
                     // Remove task from collection when finished
                     // See: https://stackoverflow.com/a/6033036/12347616
                     task.ContinueWith(t =>
                     {
                         _printer.WriteLine($"Task {id} Trying to remove task from collection");
                         if (t == null) return;
-                        if (_tasks.TryRemove(id, out t)) _printer.WriteLine($"Task {id} Removed task from collection successfully");
+                        if (_tasks.TryRemove(id, out t))
+                            _printer.WriteLine($"Task {id} Removed task from collection successfully");
+                        client.Close();
                     }, token);
                 }
                 catch (Exception)
                 {
-                    // ignored
                     // Prevent SocketException when break
                     // _printer.WriteLine($"Exc: {exception.Message}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Processes a new client request and returns a response to them.
+        /// </summary>
+        /// <param name="client"></param>
+        private void Process(ITcpClient client)
+        {
+            //_printer.WriteLine($"Task {Task.CurrentId} Processing");
+            if (client == null) return;
+            //_printer.WriteLine($"Task {Task.CurrentId} Sleeping");
+            // await Task.Delay(5000); 
+            //_printer.WriteLine($"Task {Task.CurrentId} Awaken");
+
+            // Here send the message to the ServiceHandler and back to client
+            ServiceHandler service = new ServiceHandler(_mapping);
+            Request request = client.ReadRequest(_mapping);
+            Response response = service.HandleRequest(request);
+            client.SendResponse(response);
         }
 
         /// <summary>
@@ -90,14 +132,11 @@ namespace ServerModule.Tcp
         /// </summary>
         public void Stop()
         {
+            if (_listening == false) return;
             // Stop listening
             _listening = false;
             // Cleanup tasks
             _tokenSource.Cancel();
-            if (_tokenSource.IsCancellationRequested)
-            {
-                _printer.WriteLine("Canceled Token");
-            }
             _printer.WriteLine($"Number of tasks: {_tasks.Count}");
             foreach (var task in _tasks.Values)
             {
@@ -109,59 +148,14 @@ namespace ServerModule.Tcp
                 }
                 catch (Exception)
                 {
-                    // ignored
                     // Prevent TaskCanceledException
                     // _printer.WriteLine($"Exc: {exception.Message}");
                 }
             }
 
+            _tokenSource.Dispose();
             _tasks.Clear();
-            // Stop listener
             _server.Stop();
-        }
-        /// <summary>
-        /// Processes a new client request and returns a response to them.
-        /// </summary>
-        /// <param name="client"></param>
-        private async Task Process(TcpClient client)
-        {
-            //_printer.WriteLine($"Task {Task.CurrentId} Processing");
-            if (client == null) return;
-            //_printer.WriteLine($"Task {Task.CurrentId} Sleeping");
-            // await Task.Delay(5000); 
-            //_printer.WriteLine($"Task {Task.CurrentId} Awaken");
-            try
-            {
-                await using StreamWriter writer = new StreamWriter(client.GetStream()) { AutoFlush = true };
-                await writer.WriteLineAsync("Welcome to my server!");
-                await using NetworkStream reader = client.GetStream();
-                string message = ToString(reader);
-                if (message == null) return;
-                _printer.WriteLine($"\n\nreceived:\n{message}");
-                // Here send the message to the ServiceHandler and back to client
-                await writer.WriteLineAsync(new ServiceHandler().Handle(message));
-            }
-            catch (Exception exc)
-            {
-                _printer.WriteLine("error occurred: " + exc.Message);
-            }
-        }
-
-        public string ToString(NetworkStream stream)
-        {
-            using MemoryStream memoryStream = new MemoryStream();
-            byte[] data = new byte[1024];
-            do
-            {
-                int size = stream.Read(data, 0, data.Length);
-                if (size == 0)
-                {
-                    _printer.WriteLine("client disconnected...");
-                    return null;
-                }
-                memoryStream.Write(data, 0, size);
-            } while (stream.DataAvailable);
-            return Encoding.ASCII.GetString(memoryStream.ToArray());
         }
     }
 }

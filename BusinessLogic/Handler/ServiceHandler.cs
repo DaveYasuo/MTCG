@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using BusinessLogic.Requests;
+using BusinessLogic.Responses;
 
 namespace BusinessLogic
 {
@@ -25,6 +27,10 @@ namespace BusinessLogic
         }
         private readonly Dictionary<Enum, char> _separators = new() { { Char.WhiteSpace, ' ' }, { Char.NewLine, '\n' } };
 
+        public ServiceHandler(Request request)
+        {
+        }
+
         public string Handle(string message)
         {
             List<string> httpRequestParts = new List<string>(message.Split(_separators[Char.NewLine]));
@@ -43,6 +49,11 @@ namespace BusinessLogic
                 requestHandler.Handle(rawUrl, data);
             }
             return null; // todo
+        }
+
+        public Response GetResponse()
+        {
+            return new Response();
         }
     }
 }

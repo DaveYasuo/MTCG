@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using BusinessLogic;
+using ServerModule.SimpleLogic.Handler;
 
 namespace ServerModule.Http
 {
@@ -29,7 +29,7 @@ namespace ServerModule.Http
                 //Console.WriteLine(request.RawUrl);
                 string data = new StreamReader(context.Request.InputStream).ReadToEnd();
                 //Console.WriteLine(data);
-                new RequestHandler().Handle(request.RawUrl, data);
+                // new RequestHandler().Handle(request.RawUrl, data);
 
                 // Obtain a response object.
                 HttpListenerResponse response = context.Response;
