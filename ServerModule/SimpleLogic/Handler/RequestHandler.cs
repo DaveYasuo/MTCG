@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Data.Users;
+using ServerModule.Database.Models;
 using ServerModule.SimpleLogic.Responses;
+using ServerModule.SimpleLogic.Security;
 using ServerModule.Utility;
 
 namespace ServerModule.SimpleLogic.Handler
@@ -140,11 +141,12 @@ namespace ServerModule.SimpleLogic.Handler
         public static object PostUser(RequestHandlerData requestHandlerData)
         {
             Dictionary<string, object> payload = (Dictionary<string, object>)requestHandlerData.Payload;
-            User newUser = payload.GetObject<User>();
             if (payload == null) return Response.Status(Status.BadRequest);
-            var resultTuple = newUser.Register();
-            var result = auth.Register((payload["Username"] as string)!, (payload["Password"] as string)!);
-            return !result.Item1 ? Response.Status(Status.Conflict) : Response.PlainText(result.Item2, Status.Created);
+            User newUser = payload.GetObject<User>();
+            (bool success, string token) = newUser.Register();
+            return success
+                ? Response.PlainText(token, Status.Created)
+                : Response.PlainText("User already exists", Status.Conflict);
         }
 
         private static Dictionary<string, Func<RequestHandlerData, object>> PutHandler()

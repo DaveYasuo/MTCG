@@ -36,6 +36,7 @@ namespace ServerModule.SimpleLogic.Responses
         {
             StatusCode = (int)status;
             StatusName = Utils.GetResponseStatusText(StatusCode);
+            ContainsBody = true;
             IsJson = true;
             Payload = JsonSerializer.Serialize(json);
             ContentType = "application/json";
@@ -45,6 +46,7 @@ namespace ServerModule.SimpleLogic.Responses
         {
             StatusCode = (int)status;
             StatusName = Utils.GetResponseStatusText(StatusCode);
+            ContainsBody = true;
             IsText = true;
             Payload = plainText;
             ContentType = "text/plain; charset=utf-8";

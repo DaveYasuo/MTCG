@@ -1,4 +1,5 @@
-﻿using ServerModule.Utility;
+﻿using ServerModule.Database.Models;
+using ServerModule.Utility;
 
 namespace ServerModule.SimpleLogic.Security
 {
@@ -8,7 +9,7 @@ namespace ServerModule.SimpleLogic.Security
     public class Authentication
     {
         private static readonly ISecurity Security = new Security();
-        
+
         /// <summary>
         /// Checks if the Request needs Authentication
         /// </summary>
@@ -23,6 +24,11 @@ namespace ServerModule.SimpleLogic.Security
         public static bool Check(string type, string token)
         {
             return Security.Authenticate(type, token);
+        }
+
+        public static (bool, string) Register(User user)
+        {
+            return Security.Register(user);
         }
     }
 }

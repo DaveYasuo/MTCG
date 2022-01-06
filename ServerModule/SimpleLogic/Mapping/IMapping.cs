@@ -21,10 +21,10 @@ namespace ServerModule.SimpleLogic.Mapping
         /// <summary>
         /// Invokes the method for the corresponding method and path.
         /// </summary>
+        /// <param name="method"></param>
         /// <param name="path"></param>
         /// <param name="token"></param>
         /// <param name="payload"></param>
-        /// <param name="method"></param>
         /// <param name="pathVariable"></param>
         /// <param name="requestParam"></param>
         /// <returns>Returns a Response object</returns>

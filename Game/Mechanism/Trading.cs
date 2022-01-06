@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Mechanism
+﻿namespace Game.Mechanism
 {
     public class Trading
     {

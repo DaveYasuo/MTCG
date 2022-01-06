@@ -1,31 +1,30 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace DatabaseModule.Docker
+namespace ServerModule.Docker
 {
+    /// <summary>
+    /// Get Docker Container Environment Variables
+    /// </summary>
     public static class DockerPostgresEnv
     {
-        // Container Name of the Postgres DB-Image
-        private static readonly string ContainerName;
-        private static readonly string UsernameEnv;
-        private static readonly string PasswordEnv;
-        public static string PostgresUser { get; private set; }
-        public static string PostgresPassword { get; private set; }
+        /// <summary>
+        /// Container Username of the Postgres DB-Image
+        /// </summary>
+        public static readonly string ContainerName;
+        public static readonly string PostgresUser;
+        public static readonly string PostgresPassword;
 
         static DockerPostgresEnv()
         {
             ContainerName = "swe1db";
-            UsernameEnv = "POSTGRES_USER";
-            PasswordEnv = "POSTGRES_PASSWORD";
-            GetEnvironmentVariables();
-        }
-
-        private static void GetEnvironmentVariables()
-        {
+            // Environment Variables of docker container
+            const string usernameEnv = "POSTGRES_USER";
+            const string passwordEnv = "POSTGRES_PASSWORD";
             // ReSharper disable once StringLiteralTypo
-            PostgresUser = ExecuteCommand($"docker exec {ContainerName} printenv {UsernameEnv}");
+            PostgresUser = ExecuteCommand($"docker exec {ContainerName} printenv {usernameEnv}");
             // ReSharper disable once StringLiteralTypo
-            PostgresPassword = ExecuteCommand($"docker exec {ContainerName} printenv {PasswordEnv}");
+            PostgresPassword = ExecuteCommand($"docker exec {ContainerName} printenv {passwordEnv}");
         }
 
         private static string ExecuteCommand(string command)

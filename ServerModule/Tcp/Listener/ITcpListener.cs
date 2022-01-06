@@ -1,5 +1,4 @@
-﻿using DatabaseModule;
-using ServerModule.Tcp.Client;
+﻿using ServerModule.Tcp.Client;
 
 namespace ServerModule.Tcp.Listener
 {

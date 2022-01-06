@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DatabaseModule\DatabaseModule.csproj" />
     <ProjectReference Include="..\DebugAndTrace\DebugAndTrace.csproj" />
     <ProjectReference Include="..\ServerModule\ServerModule.csproj" />
   </ItemGroup>

@@ -5,17 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include=".ignore\Http\HttpServer.cs" />
-    <Compile Include=".ignore\Sockets\SocketServer.cs" />
+    <Compile Remove=".ignore\**" />
+    <EmbeddedResource Remove=".ignore\**" />
+    <None Remove=".ignore\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+    <PackageReference Include="Npgsql" Version="6.0.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DatabaseModule\DatabaseModule.csproj" />
-    <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\DebugAndTrace\DebugAndTrace.csproj" />
   </ItemGroup>
 

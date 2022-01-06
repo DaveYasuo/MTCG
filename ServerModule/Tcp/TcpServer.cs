@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using DatabaseModule;
 using DebugAndTrace;
 using ServerModule.SimpleLogic.Handler;
 using ServerModule.SimpleLogic.Mapping;
@@ -16,29 +15,20 @@ namespace ServerModule.Tcp
     public class TcpServer : IServer
     {
         private bool _listening;
-        private readonly IPrinter _printer;
+        private readonly IPrinter _printer = Printer.Instance;
         private readonly ITcpListener _server;
         private readonly IMapping _mapping;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private CancellationTokenSource _tokenSource;
 
-        public TcpServer(ITcpListener server, IPrinter printer, IMapping mapping)
-        {
-            _printer = printer;
-            _mapping = mapping;
-            _server = server;
-        }
-
         public TcpServer(ITcpListener server, IMapping mapping)
         {
-            _printer = new ConsolePrinter();
             _server = server;
             _mapping = mapping;
         }
 
         public TcpServer(ITcpListener server)
         {
-            _printer = new ConsolePrinter();
             _mapping = new Mapping();
             _server = server;
         }
@@ -46,7 +36,6 @@ namespace ServerModule.Tcp
         public TcpServer()
         {
             _server = new TcpListener(10001);
-            _printer = new ConsolePrinter();
             _mapping = new Mapping();
         }
 

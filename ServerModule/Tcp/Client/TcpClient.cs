@@ -22,44 +22,6 @@ namespace ServerModule.Tcp.Client
             _client = client;
         }
 
-        public void SendResponse(Response response)
-        {
-            // Send request
-            // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
-            // and: https://developer.mozilla.org/en-US/docs/Glossary/Response_header
-            // and: https://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01
-
-            using StreamWriter writer = new StreamWriter(_client.GetStream()) { AutoFlush = true };
-            StringBuilder responseString = new StringBuilder();
-            responseString.AppendLine($"HTTP/1.1 {response.StatusCode} {response.StatusName}\r");
-            responseString.AppendLine("Server: MTCG-Docker-Service");
-            // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
-            // and: https://stackoverflow.com/a/38648237
-            responseString.AppendLine("Connection: close");
-            // Format date using RFC1123 pattern 
-            // See: https://docs.microsoft.com/en-us/dotnet/api/system.datetime.getdatetimeformats?view=net-6.0
-            // and: https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
-            responseString.AppendLine(DateTime.Now.ToString("R"));
-
-            if (!response.ContainsBody) writer.Write(responseString);
-            else
-            {
-                // Send payload
-                // See: https://riptutorial.com/dot-net/example/88/sending-a-post-request-with-a-string-payload-using-system-net-webclient
-                // and: https://stackoverflow.com/a/4414118/12347616
-                // and: https://blog.j2i.net/2021/10/12/simple-http-server-in-net/
-                responseString.AppendLine($"Content-Type: {response.ContentType}");
-                byte[] payload = Encoding.UTF8.GetBytes(response.Payload);
-                responseString.AppendLine($"Content-Length: {payload.Length}");
-                writer.Write(Encoding.UTF8.GetString(payload));
-            }
-        }
-
-        public void Close()
-        {
-            _client.Close();
-        }
-
         public Request ReadRequest(IMapping mapping)
         {
             // Read request
@@ -73,7 +35,7 @@ namespace ServerModule.Tcp.Client
              */
 
             // Set timeout
-            _client.ReceiveTimeout = 1000;
+            //_client.ReceiveTimeout = 1000;
             // leaveOpen: true, because if I dispose the dataStream now, it will also close the underlying NetworkStream of the client
             using StreamReader reader = new StreamReader(_client.GetStream(), leaveOpen: true);
 
@@ -188,6 +150,46 @@ namespace ServerModule.Tcp.Client
             // Log request and return Request if the requested endpoint exists
             Request request = new Request(method, target, version, headers, payload, pathVariable, requestParam);
             return request;
+        }
+
+        public void SendResponse(Response response)
+        {
+            // Send request
+            // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
+            // and: https://developer.mozilla.org/en-US/docs/Glossary/Response_header
+            // and: https://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01
+
+            using StreamWriter writer = new StreamWriter(_client.GetStream()) { AutoFlush = true };
+            StringBuilder responseString = new StringBuilder();
+            responseString.AppendLine($"HTTP/1.1 {response.StatusCode} {response.StatusName}\r");
+            responseString.AppendLine("Server: MTCG-Docker-Service");
+            // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
+            // and: https://stackoverflow.com/a/38648237
+            responseString.AppendLine("Connection: close");
+            // Format date using RFC1123 pattern 
+            // See: https://docs.microsoft.com/en-us/dotnet/api/system.datetime.getdatetimeformats?view=net-6.0
+            // and: https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
+            responseString.AppendLine(DateTime.Now.ToString("R"));
+
+            if (!response.ContainsBody) writer.Write(responseString);
+            else
+            {
+                // Send payload
+                // See: https://riptutorial.com/dot-net/example/88/sending-a-post-request-with-a-string-payload-using-system-net-webclient
+                // and: https://stackoverflow.com/a/4414118/12347616
+                // and: https://blog.j2i.net/2021/10/12/simple-http-server-in-net/
+                responseString.AppendLine($"Content-Type: {response.ContentType}");
+                byte[] payload = Encoding.UTF8.GetBytes(response.Payload);
+                responseString.AppendLine($"Content-Length: {payload.Length}");
+                responseString.AppendLine();
+                responseString.AppendLine(Encoding.UTF8.GetString(payload));
+                writer.Write(responseString);
+            }
+        }
+
+        public void Close()
+        {
+            _client.Close();
         }
 
         ~TcpClient()

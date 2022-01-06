@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Text.Json;
+using ServerModule.SimpleLogic.Security;
 
-namespace Data.Users
+namespace ServerModule.Database.Models
 {
     public enum Role
     {
@@ -19,9 +20,17 @@ namespace Data.Users
         public string Username { get; set; }
         public string Password { get; set; }
 
+        public User(){}
+
+        public User(string username, string password)
+        {
+            Username = username;
+            Password = password;
+        }
+
         public (bool, string) Register()
         {
-            return Authentication
+            return Authentication.Register(this);
         }
 
         public static void PrintUserData(string data)

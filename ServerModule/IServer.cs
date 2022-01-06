@@ -1,4 +1,4 @@
-﻿namespace DatabaseModule
+﻿namespace ServerModule
 {
     public interface IServer
     {

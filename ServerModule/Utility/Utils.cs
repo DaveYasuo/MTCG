@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using ServerModule.SimpleLogic.Responses;
 
 namespace ServerModule.Utility
@@ -66,21 +65,29 @@ namespace ServerModule.Utility
         // See: https://stackoverflow.com/a/28323995
         public static object GetObject(this Dictionary<string, object> dict, Type type)
         {
-            var obj = Activator.CreateInstance(type);
-
-            foreach (var kv in dict)
+            try
             {
-                var prop = type.GetProperty(kv.Key);
-                if (prop == null) continue;
+                var obj = Activator.CreateInstance(type);
 
-                object value = kv.Value;
-                if (value is Dictionary<string, object> dictionary)
+                foreach (var kv in dict)
                 {
-                    value = GetObject(dictionary, prop.PropertyType);
+                    var prop = type.GetProperty(kv.Key);
+                    if (prop == null) continue;
+
+                    object value = kv.Value;
+                    if (value is Dictionary<string, object> dictionary)
+                    {
+                        value = GetObject(dictionary, prop.PropertyType);
+                    }
+                    prop.SetValue(obj, value.ToString(), null);
                 }
-                prop.SetValue(obj, value, null);
+                return obj;
             }
-            return obj;
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw;
+            }
         }
 
         public static T GetObject<T>(this Dictionary<string, object> dict)

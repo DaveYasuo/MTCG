@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Threading;
 
-namespace Data.Cards
+namespace Game.Data.Cards
 {
     public class Package
     {
