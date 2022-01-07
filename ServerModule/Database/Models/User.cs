@@ -4,17 +4,9 @@ using ServerModule.SimpleLogic.Security;
 
 namespace ServerModule.Database.Models
 {
-    public enum Role
-    {
-        User,
-        Admin
-    }
-
-    public enum TokenType
-    {
-        Basic
-    }
-
+    /// <summary>
+    /// This class is used to make JSON data (register and login) to User class
+    /// </summary>
     public class User
     {
         public string Username { get; set; }
@@ -28,7 +20,7 @@ namespace ServerModule.Database.Models
             Password = password;
         }
 
-        public (bool, string) Register()
+        public string Register()
         {
             return Authentication.Register(this);
         }
@@ -47,6 +39,11 @@ namespace ServerModule.Database.Models
                 Console.WriteLine(e);
                 throw;
             }
+        }
+
+        public string Login()
+        {
+            return Authentication.Login(this);
         }
     }
 }

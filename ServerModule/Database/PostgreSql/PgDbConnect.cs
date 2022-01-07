@@ -18,9 +18,9 @@ namespace ServerModule.Database.PostgreSql
         private readonly string _database;
 
 
-        /**
-         * Default Constructor reads Credentials from Docker Environment Variables
-         **/
+        /// <summary>
+        /// Default Constructor reads Credentials from Docker Environment Variables
+        /// </summary>
         public PgDbConnect()
         {
             _host = "localhost";
@@ -46,7 +46,6 @@ namespace ServerModule.Database.PostgreSql
 
         public void Start()
         {
-            Console.WriteLine("Hey");
             _connString = $"Host={_host};Username={_username};Password={_password};Include Error Detail=true;";
             try
             {
@@ -55,10 +54,13 @@ namespace ServerModule.Database.PostgreSql
                 _connection = new NpgsqlConnection(_connString);
                 // check if connection is valid, if not throws an exception -> host, username, password or database has Typing error
                 _connection.Open();
+                if (!ContainsDb()) CreateDb();
+                CreateConnection();
+                CreateTablesIfNoExist();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Printer.Instance.WriteLine(e.Message);
                 throw;
             }
         }
@@ -88,6 +90,52 @@ namespace ServerModule.Database.PostgreSql
             return connection;
         }
 
+        private bool ContainsDb()
+        {
+            // Check if database exists
+            // See: https://stackoverflow.com/a/20032567/12347616
+            // ReSharper disable once StringLiteralTypo
+            using NpgsqlCommand cmdCheck = new NpgsqlCommand($"SELECT 1 FROM pg_database WHERE datname='{_database}'", _connection);
+            return cmdCheck.ExecuteScalar() != null;
+        }
+
+        private void CreateConnection()
+        {
+            // Close general connection and build new one to the database
+            _connection.Close();
+            _connString += $"Database={_database};";
+            _connection = new NpgsqlConnection(_connString);
+            _connection.Open();
+        }
+
+        private void CreateDb()
+        {
+            // Database does not exist; Create database and tables 
+            // See: https://stackoverflow.com/a/17840078/12347616
+            using NpgsqlCommand cmd = new NpgsqlCommand($@"CREATE DATABASE {_database} ENCODING = 'UTF8'", _connection);
+            cmd.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Creates 5 tables: cards, credentials, packages, profile and store if non exists.
+        /// </summary>
+        private void CreateTablesIfNoExist()
+        {
+            // Create Table
+            // See: https://stackoverflow.com/a/35526607
+            // Reserved keywords
+            // See: https://www.postgresql.org/docs/current/sql-keywords-appendix.html
+            // Data Types
+            // See: https://www.postgresql.org/docs/9.1/datatype.html
+            // And: https://www.postgresql.org/docs/9.1/datatype-numeric.html
+
+            // order is important
+            CreateCredentials();
+            CreateProfile();
+            CreatePackages();
+            if (CreateCards() && CreateStore()) AlterCards();
+        }
+
         public void PrintVersion()
         {
             using NpgsqlCommand command = new NpgsqlCommand();
@@ -98,57 +146,110 @@ namespace ServerModule.Database.PostgreSql
             Printer.Instance.WriteLine($"PostgreSQL version: {version}");
         }
 
-        public void CreateDbIfNoExists()
+        private void CreateCredentials()
         {
-            // Check if database exists
-            // See: https://stackoverflow.com/a/20032567/12347616
-            bool dbExists;
-            // ReSharper disable once StringLiteralTypo
-            using (NpgsqlCommand cmdCheck = new NpgsqlCommand($"SELECT 1 FROM pg_database WHERE datname='{_database}'", _connection))
-            {
-                dbExists = cmdCheck.ExecuteScalar() != null;
-            }
-
-            if (dbExists)
-            {
-                Console.WriteLine("DB Exists");
-                // Close general connection and build new one to database
-                _connection.Close();
-                _connString += $"Database={_database};";
-                _connection = new NpgsqlConnection(_connString);
-                _connection.Open();
-                return;
-            }
-            Console.WriteLine("DB !Exists");
-
-            // Database does not exist; Create database and tables 
-            // See: https://stackoverflow.com/a/17840078/12347616
-            using (NpgsqlCommand cmd = new NpgsqlCommand($@"CREATE DATABASE {_database} ENCODING = 'UTF8'", _connection))
-            {
-                cmd.ExecuteNonQuery();
-            }
-            // Close general connection and build new one to database
-            _connection.Close();
-            _connString += $"Database={_database};";
-            _connection = new NpgsqlConnection(_connString);
-            _connection.Open();
-        }
-
-        public void CreateTablesIfNoExist()
-        {
-            // Create Table
-            // See: https://stackoverflow.com/a/35526607
-            // Varchar Length for hashed Password
-            // See: https://stackoverflow.com/a/247627
             // user is a reserved keyword
             // See: https://stackoverflow.com/a/22256451
+            // Char Length for hashed Password SHA256
+            // See: https://stackoverflow.com/a/247627
             using var cmd = new NpgsqlCommand(@"
-            CREATE TABLE IF NOT EXISTS player(
+            CREATE TABLE IF NOT EXISTS credentials(
                 username VARCHAR(100) NOT NULL,
-                password VARCHAR(256) NOT NULL,
-                roleType VARCHAR(10) NOT NULL,
+                password CHAR(64) NOT NULL,
+                role VARCHAR(10) NOT NULL,
                 PRIMARY KEY(username)
             )", _connection);
+            cmd.ExecuteNonQuery();
+        }
+
+        private void CreateProfile()
+        {
+            // why using 255 over 256?
+            // See: https://stackoverflow.com/a/2340662
+            // Usage of foreign keys
+            // See: https://www.postgresqltutorial.com/postgresql-foreign-key/
+            using var cmd = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS profile(
+                username VARCHAR(100),
+                name VARCHAR(100),
+                bio VARCHAR(255),
+                image VARCHAR(255),
+                elo SMALLINT NOT NULL,
+                wins INTEGER NOT NULL,
+                losses INTEGER NOT NULL,
+                draws INTEGER NOT NULL,
+                coins BIGINT NOT NULL,
+                PRIMARY KEY(username),
+                CONSTRAINT fk_user
+                    FOREIGN KEY(username)
+                        REFERENCES credentials(username)
+                        ON DELETE CASCADE
+            )", _connection);
+            cmd.ExecuteNonQuery();
+        }
+
+        private void CreatePackages()
+        {
+            using var cmd = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS packages(
+                id SERIAL,
+                PRIMARY KEY(id)
+            )", _connection);
+            cmd.ExecuteNonQuery();
+        }
+
+        private bool CreateCards()
+        {
+            using var cmd = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS cards(
+                id CHAR(36) NOT NULL,
+                card_name VARCHAR(30) NOT NULL,
+                damage REAL NOT NULL,
+                package INTEGER,
+                username VARCHAR(100),
+                deck BOOLEAN,
+                store CHAR(36),
+                PRIMARY KEY(id),
+                CONSTRAINT fk_package
+                    FOREIGN KEY(package)
+                        REFERENCES packages(id)
+                        ON DELETE SET NULL,
+                CONSTRAINT fk_user
+                    FOREIGN KEY(username)
+                        REFERENCES profile(username)
+                        ON DELETE CASCADE
+            )", _connection);
+            return cmd.ExecuteNonQuery() != -1;
+        }
+
+        private bool CreateStore()
+        {
+            using var cmd = new NpgsqlCommand(@"
+            CREATE TABLE IF NOT EXISTS store(
+                id CHAR(36),
+                card_id CHAR(36),
+                type VARCHAR(20),
+                damage REAL,
+                PRIMARY KEY(id),
+                CONSTRAINT fk_card
+                    FOREIGN KEY(card_id)
+                        REFERENCES cards(id)
+            )", _connection);
+            return cmd.ExecuteNonQuery() != -1;
+        }
+
+        /// <summary>
+        /// Add store.id constraint to card.store
+        /// </summary>
+        private void AlterCards()
+        {
+            using var cmd = new NpgsqlCommand(@"
+            ALTER TABLE cards
+                ADD CONSTRAINT fk_store
+                    FOREIGN KEY(store)
+                        REFERENCES store(id)
+                        ON DELETE SET NULL
+            ", _connection);
             cmd.ExecuteNonQuery();
         }
 
