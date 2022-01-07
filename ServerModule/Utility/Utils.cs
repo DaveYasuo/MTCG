@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Text.Json;
 using ServerModule.SimpleLogic.Responses;
 
 namespace ServerModule.Utility
@@ -71,15 +73,30 @@ namespace ServerModule.Utility
 
                 foreach (var kv in dict)
                 {
-                    var prop = type.GetProperty(kv.Key);
+                    PropertyInfo prop = type.GetProperty(kv.Key);
                     if (prop == null) continue;
-
+                    Type propType = prop.PropertyType;
                     object value = kv.Value;
                     if (value is Dictionary<string, object> dictionary)
                     {
                         value = GetObject(dictionary, prop.PropertyType);
                     }
-                    prop.SetValue(obj, value.ToString(), null);
+                    if (value is JsonElement rawValue)
+                    {
+                        switch (rawValue.ValueKind)
+                        {
+                            case JsonValueKind.String:
+                                value = value.ToString();
+                                break;
+                            case JsonValueKind.Number:
+                                value = Convert.ToInt32(value);
+                                break;
+                        }
+                    }
+                    if (value != null && propType == value.GetType())
+                    {
+                        prop.SetValue(obj, value, null);
+                    }
                 }
                 return obj;
             }
