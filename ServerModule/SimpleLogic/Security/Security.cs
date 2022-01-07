@@ -14,7 +14,7 @@ namespace ServerModule.SimpleLogic.Security
         // Using Hashset is more efficient with constant time
         // See: https://stackoverflow.com/a/17278638
         private readonly HashSet<string> _basicTokens = new();
-        private readonly DataHandler _db = new();
+        //private readonly DataHandler _db = new();
 
         private readonly Dictionary<Method, List<string>> _protectedPaths = new()
         {
@@ -36,21 +36,34 @@ namespace ServerModule.SimpleLogic.Security
             return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.Contains(token);
         }
 
-        public (bool, string) Register(User user)
+        public string Register(User user)
         {
             // check if User already exists
-            if (DataHandler.GetUser(user.Username) != null) return (false, "");
+            if (DataHandler.GetUser(user.Username) != null) return null;
             string pwHash = GenerateHash(user.Password);
-            UserSchema newUser = user.Username.ToLower() == "admin" ? new UserSchema(user.Username, pwHash, "Admin") : new UserSchema(user.Username, pwHash, "User");
+            Credentials newUser = user.Username.ToLower() == "admin" ? new Credentials(user.Username, pwHash, "Admin") : new Credentials(user.Username, pwHash, "User");
             // check if User is added successfully to the database
-            if (!_db.AddUser(newUser)) return (false, "");
+            if (!DataHandler.AddUser(newUser)) return null;
             string token = GenerateToken(user.Username);
             AddToken(token);
-            return (true, token);
+            return token;
+        }
+
+        public string Login(User user)
+        {
+            if (!CheckCredentials(user.Username, user.Password)) return null;
+            string token = GenerateToken(user.Username);
+            AddToken(token);
+            return token;
         }
 
         private void AddToken(string token) => _basicTokens.Add(token);
 
+        /// <summary>
+        /// Generates a "username"-mtcgToken
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns the generated token</returns>
         private static string GenerateToken(string username) => username + "-mtcgToken";
 
         private static string GenerateHash(string password)
@@ -69,10 +82,15 @@ namespace ServerModule.SimpleLogic.Security
             // Return the hexadecimal string.
             return sBuilder.ToString();
         }
-
+        /// <summary>
+        /// Check given username and password with those in the database
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <returns>True if valid, else false.</returns>
         public bool CheckCredentials(string username, string password)
         {
-            UserSchema check = DataHandler.GetUser(username);
+            Credentials check = DataHandler.GetUser(username);
             if (check == null) return false;
             // Create a StringComparer an compare the hashes.
             StringComparer comparer = StringComparer.OrdinalIgnoreCase;
