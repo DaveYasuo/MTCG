@@ -8,7 +8,7 @@ namespace ServerModule.SimpleLogic.Mapping
 {
     public interface IMapping
     {
-        Dictionary<Method, Dictionary<string, Func<RequestHandlerData, object>>> MappingPath { get; }
+        Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>> MappingPath { get; }
 
         /// <summary>
         /// Checks if routing path exists.
@@ -23,11 +23,11 @@ namespace ServerModule.SimpleLogic.Mapping
         /// </summary>
         /// <param name="method"></param>
         /// <param name="path"></param>
-        /// <param name="token"></param>
+        /// <param name="username"></param>
         /// <param name="payload"></param>
         /// <param name="pathVariable"></param>
         /// <param name="requestParam"></param>
         /// <returns>Returns a Response object</returns>
-        Response InvokeMethod(Method method, string path, string token, object payload, string pathVariable, string requestParam);
+        Response InvokeMethod(Method method, string path, string username, object payload, string pathVariable, string requestParam);
     }
 }

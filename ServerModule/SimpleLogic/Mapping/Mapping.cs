@@ -8,11 +8,11 @@ namespace ServerModule.SimpleLogic.Mapping
 {
     public class Mapping : IMapping
     {
-        public Dictionary<Method, Dictionary<string, Func<RequestHandlerData, object>>> MappingPath { get; }
+        public Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>> MappingPath { get; }
 
         public Mapping()
         {
-            MappingPath = new Dictionary<Method, Dictionary<string, Func<RequestHandlerData, object>>>();
+            MappingPath = new Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>>();
             Initialize();
         }
 
@@ -37,9 +37,9 @@ namespace ServerModule.SimpleLogic.Mapping
             return MappingPath[method].ContainsKey(path);
         }
 
-        public Response InvokeMethod(Method method, string path, string token, object payload, string pathVariable, string requestParam)
+        public Response InvokeMethod(Method method, string path, string username, object payload, string pathVariable, string requestParam)
         {
-            return (Response)MappingPath[method][path].Invoke(new RequestHandlerData(token, payload, pathVariable, requestParam));
+            return MappingPath[method][path].Invoke(new RequestHandlerData(username, payload, pathVariable, requestParam));
         }
     }
 }
