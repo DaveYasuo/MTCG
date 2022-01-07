@@ -37,7 +37,7 @@ namespace ServerModule.SimpleLogic.Mapping
             return MappingPath[method].ContainsKey(path);
         }
 
-        public Response InvokeMethod(Method method, string path, string username, object payload, string pathVariable, string requestParam)
+        public Response InvokeMethod(Method method, string path, string username, string payload, string pathVariable, string requestParam)
         {
             return MappingPath[method][path].Invoke(new RequestHandlerData(username, payload, pathVariable, requestParam));
         }

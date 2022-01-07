@@ -10,7 +10,7 @@ namespace ServerModule.SimpleLogic.Handler
 {
     public class RequestHandlerData
     {
-        public RequestHandlerData(string username, object payload, string pathVariable, string requestParam)
+        public RequestHandlerData(string username, string payload, string pathVariable, string requestParam)
         {
             RequestParam = requestParam;
             PathVariable = pathVariable;
@@ -19,7 +19,7 @@ namespace ServerModule.SimpleLogic.Handler
         }
 
         public string Username { get; }
-        public object Payload { get; }
+        public string Payload { get; }
         public string PathVariable { get; }
         public string RequestParam { get; }
     }
@@ -135,22 +135,23 @@ namespace ServerModule.SimpleLogic.Handler
         /// <returns></returns>
         private static Response PostPackages(RequestHandlerData data)
         {
-            Dictionary<string, object> payload = (Dictionary<string, object>)data.Payload;
+            string payload = data.Payload;
             // Get Json Array Length
             // See: https://docs.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.getarraylength?view=net-6.0
-            if (payload?["array"] is not JsonElement { ValueKind: JsonValueKind.Array } cards || cards.GetArrayLength() is not 5) return Response.Status(Status.BadRequest);
+            //if (payload?["array"] is not JsonElement { ValueKind: JsonValueKind.Array } cards || cards.GetArrayLength() is not 5) return Response.Status(Status.BadRequest);
 
             Credentials credentials = DataHandler.GetUser(data.Username);
             if (credentials == null) return Response.Status(Status.BadRequest);
             // double check: once with username from AuthorizationToken (request), and once from database (role). Second can happen when manually alter db-table
             if (data.Username.ToLower() != "admin" && credentials.Role.ToLower() != "admin") return Response.Status(Status.Forbidden);
-            List<Card> package = new List<Card>();
             try
             {
-                foreach (JsonElement card in cards.EnumerateArray())
-                {
-                    package.Add(new Card(card.GetProperty("Id").GetString(), card.GetProperty("Name").GetString(), card.GetProperty("Damage").GetDouble()));
-                }
+                List<Card> package = JsonSerializer.Deserialize<List<Card>>(payload);
+                if (package == null || package.Count != 5) return Response.Status(Status.BadRequest);
+                //foreach (JsonElement card in cards.EnumerateArray())
+                //{
+                //    package.Add(new Card(card.GetProperty("Id").GetString(), card.GetProperty("Name").GetString(), card.GetProperty("Damage").GetDouble()));
+                //}
             }
             catch (Exception e)
             {
@@ -167,11 +168,20 @@ namespace ServerModule.SimpleLogic.Handler
         /// <returns>Response object</returns>
         private static Response PostSessions(RequestHandlerData requestHandlerData)
         {
-            Dictionary<string, object> payload = (Dictionary<string, object>)requestHandlerData.Payload;
+            string payload = requestHandlerData.Payload;
             if (payload == null) return Response.Status(Status.BadRequest);
-            User user = payload.GetObject<User>();
-            string token = user.Login();
-            return token != null ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token) : Response.PlainText("Invalid credentials", Status.Forbidden);
+            //User user = payload.GetObject<User>();
+            try
+            {
+                User user = JsonSerializer.Deserialize<User>(payload);
+                string token = user?.Login();
+                return token != null ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token) : Response.PlainText("Invalid credentials", Status.Forbidden);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return Response.PlainText("Invalid credentials", Status.Forbidden);
+            }
         }
         /// <summary>
         /// Register User
@@ -180,11 +190,19 @@ namespace ServerModule.SimpleLogic.Handler
         /// <returns>Response object</returns>
         public static Response PostUser(RequestHandlerData requestHandlerData)
         {
-            Dictionary<string, object> payload = (Dictionary<string, object>)requestHandlerData.Payload;
+            string payload = requestHandlerData.Payload;
             if (payload == null) return Response.Status(Status.BadRequest);
-            User newUser = payload.GetObject<User>();
-            string token = newUser.Register();
-            return token != null ? Response.PlainText("Register successful" + Environment.NewLine + "Token: " + token, Status.Created) : Response.PlainText("User already exists", Status.Conflict);
+            //User newUser = payload.GetObject<User>();
+            try
+            {
+                User user = JsonSerializer.Deserialize<User>(payload);
+                string token = user?.Register();
+                return token != null ? Response.PlainText("Register successful" + Environment.NewLine + "Token: " + token, Status.Created) : Response.PlainText("User already exists", Status.Conflict);
+            }
+            catch (Exception)
+            {
+                return Response.Status(Status.BadRequest);
+            }
         }
 
         private static Dictionary<string, Func<RequestHandlerData, Response>> PutHandler()

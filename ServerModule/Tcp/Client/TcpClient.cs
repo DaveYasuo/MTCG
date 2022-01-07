@@ -50,7 +50,7 @@ namespace ServerModule.Tcp.Client
 
             // payload variables must be initialized because it may be empty
             int contentLength = 0;
-            object payload = null;
+            string payload = null;
             string requestParam = null;
             string pathVariable = null;
 

@@ -28,6 +28,6 @@ namespace ServerModule.SimpleLogic.Mapping
         /// <param name="pathVariable"></param>
         /// <param name="requestParam"></param>
         /// <returns>Returns a Response object</returns>
-        Response InvokeMethod(Method method, string path, string username, object payload, string pathVariable, string requestParam);
+        Response InvokeMethod(Method method, string path, string username, string payload, string pathVariable, string requestParam);
     }
 }
