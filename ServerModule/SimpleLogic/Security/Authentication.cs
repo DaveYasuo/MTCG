@@ -26,9 +26,14 @@ namespace ServerModule.SimpleLogic.Security
             return Security.Authenticate(type, token);
         }
 
-        public static (bool, string) Register(User user)
+        public static string Register(User user)
         {
             return Security.Register(user);
+        }
+
+        public static string Login(User user)
+        {
+            return Security.Login(user);
         }
     }
 }
