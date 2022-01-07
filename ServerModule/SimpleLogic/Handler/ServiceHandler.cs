@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks.Dataflow;
-using ServerModule.SimpleLogic.Mapping;
+﻿using ServerModule.SimpleLogic.Mapping;
 using ServerModule.SimpleLogic.Requests;
 using ServerModule.SimpleLogic.Responses;
 using ServerModule.SimpleLogic.Security;
@@ -51,7 +50,7 @@ namespace ServerModule.SimpleLogic.Handler
             if (Authentication.Check(type, token))
             {
                 // invoke the corresponding function
-                return _mapping.InvokeMethod(request.Method, request.Target, token, request.Payload, request.PathVariable, request.RequestParam);
+                return _mapping.InvokeMethod(request.Method, request.Target, token[..^10], request.Payload, request.PathVariable, request.RequestParam);
             }
             return Response.Status(Status.Forbidden);
         }
