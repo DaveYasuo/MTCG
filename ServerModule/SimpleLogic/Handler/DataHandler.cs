@@ -40,17 +40,17 @@ namespace ServerModule.SimpleLogic.Handler
         //    command.ExecuteNonQuery();
         //}
 
-        public static UserSchema GetUser(string username)
+        public static Credentials GetUser(string username)
         {
             using NpgsqlConnection conn = Connection();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM player WHERE username=@p1", conn);
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM credentials WHERE username=@p1", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
                 if (!reader.Read()) return null;
-                UserSchema user = new UserSchema(
+                Credentials user = new Credentials(
 
                     reader.GetString(reader.GetOrdinal("username")),
                     reader.GetString(reader.GetOrdinal("password")),
@@ -64,20 +64,42 @@ namespace ServerModule.SimpleLogic.Handler
             }
         }
 
-        public bool AddUser(UserSchema user)
+        /// <summary>
+        /// Add the given Credentials object to the database
+        /// </summary>
+        /// <param name="auth"></param>
+        /// <returns>Returns true if success, else false</returns>
+        public static bool AddUser(Credentials auth)
         {
-
-            const string sql = "INSERT INTO player(username,password,roleType) VALUES(@p1,@p2,@p3)";
+            // two sql statements but one transaction
+            // See: https://stackoverflow.com/a/175138
+            const string credentials = "INSERT INTO credentials(username,password,role) VALUES(@p1,@p2,@p3)";
+            const string profile = "INSERT INTO profile(username,name,bio,image,elo,wins,losses,draws,coins) VALUES(@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9)";
             using NpgsqlConnection conn = Connection();
             using NpgsqlTransaction transaction = conn.BeginTransaction();
             try
             {
-                using NpgsqlCommand command = new NpgsqlCommand(sql, conn, transaction);
-                command.Parameters.AddWithValue("p1", user.Username);
-                command.Parameters.AddWithValue("p2", user.Password);
-                command.Parameters.AddWithValue("p3", user.RoleType);
-                command.Prepare();
-                _printer.WriteLine(command.ExecuteNonQuery());
+                using NpgsqlCommand credentialsCmd = new NpgsqlCommand(credentials, conn, transaction);
+                credentialsCmd.Parameters.AddWithValue("p1", auth.Username);
+                credentialsCmd.Parameters.AddWithValue("p2", auth.Password);
+                credentialsCmd.Parameters.AddWithValue("p3", auth.Role);
+                credentialsCmd.Prepare();
+
+                Profile userProfile = new Profile(auth.Username);
+                using NpgsqlCommand profileCmd = new NpgsqlCommand(profile, conn, transaction);
+                profileCmd.Parameters.AddWithValue("p1", userProfile.Username);
+                profileCmd.Parameters.AddWithValue("p2", userProfile.Name);
+                profileCmd.Parameters.AddWithValue("p3", userProfile.Bio);
+                profileCmd.Parameters.AddWithValue("p4", userProfile.Image);
+                profileCmd.Parameters.AddWithValue("p5", userProfile.Elo);
+                profileCmd.Parameters.AddWithValue("p6", userProfile.Wins);
+                profileCmd.Parameters.AddWithValue("p7", userProfile.Losses);
+                profileCmd.Parameters.AddWithValue("p8", userProfile.Draws);
+                profileCmd.Parameters.AddWithValue("p9", userProfile.Coins);
+                profileCmd.Prepare();
+                
+                credentialsCmd.ExecuteNonQuery();
+                profileCmd.ExecuteNonQuery();
                 transaction.Commit();
                 return true;
             }
