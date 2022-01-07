@@ -145,9 +145,9 @@ namespace ServerModule.Tcp.Client
                     }
                 }
                 payload = body.ToString();
-                IRequest.ParseBody(ref payload, headers["Content-Type"]);
+                IRequest.CheckPayload(ref payload, headers["Content-Type"]);
+                if (payload == null) return null;
             }
-            // Log request and return Request if the requested endpoint exists
             Request request = new Request(method, target, version, headers, payload, pathVariable, requestParam);
             return request;
         }

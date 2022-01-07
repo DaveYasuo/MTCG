@@ -76,15 +76,15 @@ namespace ServerModule.Tcp
                     //_printer.WriteLine($"Task {id} Waiting for complete");
                     Task task = Task.Run(() => Process(client), token);
                     _tasks[id] = task;
-                    _printer.WriteLine($"Task {id} added to the collection");
+                    //_printer.WriteLine($"Task {id} added to the collection");
                     // Remove task from collection when finished
                     // See: https://stackoverflow.com/a/6033036/12347616
                     task.ContinueWith(t =>
                     {
-                        _printer.WriteLine($"Task {id} Trying to remove task from collection");
+                        //_printer.WriteLine($"Task {id} Trying to remove task from collection");
                         if (t == null) return;
-                        if (_tasks.TryRemove(id, out t))
-                            _printer.WriteLine($"Task {id} Removed task from collection successfully");
+                        _tasks.TryRemove(id, out t);
+                        //_printer.WriteLine($"Task {id} Removed task from collection successfully");
                         client.Close();
                     }, token);
                 }
@@ -126,14 +126,14 @@ namespace ServerModule.Tcp
             _listening = false;
             // Cleanup tasks
             _tokenSource.Cancel();
-            _printer.WriteLine($"Number of tasks: {_tasks.Count}");
+            //_printer.WriteLine($"Number of tasks: {_tasks.Count}");
             foreach (var task in _tasks.Values)
             {
                 if (task.IsCompleted) continue;
                 try
                 {
-                    _printer.WriteLine($"Wait for Task {task.Id}");
-                    _printer.WriteLine(task.Wait(500) ? "Task is complete" : "Task failed.");
+                    //_printer.WriteLine($"Wait for Task {task.Id}");
+                    _printer.WriteLine(task.Wait(500) ? "Task is completed" : "Task failed.");
                 }
                 catch (Exception)
                 {
