@@ -166,7 +166,7 @@ namespace ServerModule.Tcp.Client
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
             // and: https://stackoverflow.com/a/38648237
             responseString.AppendLine("Connection: close");
-            // Format date using RFC1123 pattern 
+            // Format date using RFC1123 pattern
             // See: https://docs.microsoft.com/en-us/dotnet/api/system.datetime.getdatetimeformats?view=net-6.0
             // and: https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
             responseString.AppendLine(DateTime.Now.ToString("R"));

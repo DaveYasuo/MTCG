@@ -1,8 +1,10 @@
 ﻿using DebugAndTrace;
 using ServerModule.Database.PostgreSql;
+using ServerModule.Docker;
 using ServerModule.SimpleLogic.Mapping;
 using ServerModule.Tcp;
 using ServerModule.Tcp.Listener;
+using ServerModule.Utility;
 
 namespace MTCG
 {
@@ -19,21 +21,17 @@ namespace MTCG
             // Initialize the output stream
             Printer.CreateInstance(ConsolePrinter.Instance);
             IPrinter printer = Printer.Instance;
-            printer.WriteLine("Hello World!");
-            //Db newDb = new Db(new ConsolePrinter(), "localhost", "test", "test", "test");
-            //PgDbConnect db = new PgDbConnect();
-            //db.PrintVersion();
-            //db.ContainsDb();
-            //db.CreateTablesIfNoExist();
-            //db.Stop();
-            //NpgsqlConnection connection = PgDbConnect.GetConnection();
-            //new ConsolePrinter().WriteLine(new NpgsqlCommand("SELECT version()", connection).ExecuteScalar()?.ToString());
 
+            // Initialize Postgres Connection for faster performance (not required)
+            using (new PgDbConnect()) { }
+
+            printer.WriteLine("Hello World!");
+            // Initialize Mapping for Routing
             Mapping mapping = new Mapping();
+            // Start Server
             TcpListener listener = new TcpListener(10001);
             TcpServer server = new TcpServer(listener, mapping);
             server.Start();
-
 
             printer.WriteLine("Hello Afterlife!");
         }
