@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using ServerModule.SimpleLogic.Handler;
 using ServerModule.SimpleLogic.Responses;
 using ServerModule.Utility;
+using RequestHandler = ServerModule.SimpleLogic.Handler.RequestHandling.RequestHandler;
 
 namespace ServerModule.SimpleLogic.Mapping
 {
     public class Mapping : IMapping
     {
-        public Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>> MappingPath { get; }
+        public Dictionary<Method, Dictionary<string, Func<RequestData, Response>>> MappingPath { get; }
 
         public Mapping()
         {
-            MappingPath = new Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>>();
+            MappingPath = new Dictionary<Method, Dictionary<string, Func<RequestData, Response>>>();
             Initialize();
         }
 
@@ -39,7 +40,7 @@ namespace ServerModule.SimpleLogic.Mapping
 
         public Response InvokeMethod(Method method, string path, string username, string payload, string pathVariable, string requestParam)
         {
-            return MappingPath[method][path].Invoke(new RequestHandlerData(username, payload, pathVariable, requestParam));
+            return MappingPath[method][path].Invoke(new RequestData(username, payload, pathVariable, requestParam));
         }
     }
 }

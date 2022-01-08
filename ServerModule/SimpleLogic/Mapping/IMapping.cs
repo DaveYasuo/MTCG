@@ -8,7 +8,7 @@ namespace ServerModule.SimpleLogic.Mapping
 {
     public interface IMapping
     {
-        Dictionary<Method, Dictionary<string, Func<RequestHandlerData, Response>>> MappingPath { get; }
+        Dictionary<Method, Dictionary<string, Func<RequestData, Response>>> MappingPath { get; }
 
         /// <summary>
         /// Checks if routing path exists.
