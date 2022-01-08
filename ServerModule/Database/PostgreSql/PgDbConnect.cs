@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Diagnostics;
+using System.Net.Sockets;
 using DebugAndTrace;
 using Npgsql;
 using ServerModule.Docker;
@@ -13,6 +14,7 @@ namespace ServerModule.Database.PostgreSql
         private static string _connString;
 
         private readonly string _host;
+        private readonly string _port;
         private readonly string _username;
         private readonly string _password;
         private readonly string _database;
@@ -23,16 +25,18 @@ namespace ServerModule.Database.PostgreSql
         /// </summary>
         public PgDbConnect()
         {
-            _host = "localhost";
+            _host = "host.docker.internal";
             _username = DockerPostgresEnv.PostgresUser;
             _password = DockerPostgresEnv.PostgresPassword;
             _database = DockerPostgresEnv.ContainerName;
+            _port = DockerPostgresEnv.PostgresPort;
             Start();
         }
 
-        public PgDbConnect(string host, string username, string password, string database)
+        public PgDbConnect(string host, string port, string username, string password, string database)
         {
             _host = host;
+            _port = port;
             _username = username;
             _password = password;
             _database = database;
@@ -46,13 +50,17 @@ namespace ServerModule.Database.PostgreSql
 
         public void Start()
         {
-            _connString = $"Host={_host};Username={_username};Password={_password};Include Error Detail=true;";
+            // Connection string parameters
+            // See: https://www.npgsql.org/doc/connection-string-parameters.html
+            //_connString = $"Host={_host};Port={_port};Username={_username};Password={_password};Include Error Detail=true;";
+            _connString = $"Host={_host}; Port={_port}; Username={_username}; Password={_password};";
             try
             {
-                // Check if _connString is valid, if not throws an exception -> Typing error
+                // Check if Connection string is valid, if not throws an exception -> Typing error
                 _ = new NpgsqlConnectionStringBuilder(_connString);
+                // create connection
                 _connection = new NpgsqlConnection(_connString);
-                // check if connection is valid, if not throws an exception -> host, username, password or database has Typing error
+                // check if connection is established, if not throws an exception -> host, username, password or database has Typing error
                 _connection.Open();
                 if (!ContainsDb()) CreateDb();
                 CreateConnection();
@@ -103,6 +111,7 @@ namespace ServerModule.Database.PostgreSql
         {
             // Close general connection and build new one to the database
             _connection.Close();
+            // default connected database has the same name as username
             _connString += $"Database={_database};";
             _connection = new NpgsqlConnection(_connString);
             _connection.Open();
