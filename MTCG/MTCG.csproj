@@ -10,4 +10,8 @@
     <ProjectReference Include="..\ServerModule\ServerModule.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\Users\" />
+  </ItemGroup>
+
 </Project>
