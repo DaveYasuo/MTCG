@@ -7,21 +7,6 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
 {
     public partial class RequestHandler
     {
-        private static Dictionary<string, Func<RequestData, Response>> GetHandler()
-        {
-            Dictionary<string, Func<RequestData, Response>> getHandler =
-                new Dictionary<string, Func<RequestData, Response>>
-                {
-                    { "/users", GetUser },
-                    { "/cards", GetCards },
-                    { "/score", GetScore },
-                    { "/deck", GetDeck },
-                    { "/stats", GetStats },
-                    { "/tradings", GetTradings },
-                };
-            return getHandler;
-        }
-
         private static Response GetDeck(RequestData arg)
         {
             throw new NotImplementedException();

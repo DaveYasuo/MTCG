@@ -40,6 +40,21 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             }
         }
 
+        private static Dictionary<string, Func<RequestData, Response>> GetHandler()
+        {
+            Dictionary<string, Func<RequestData, Response>> getHandler =
+                new Dictionary<string, Func<RequestData, Response>>
+                {
+                    { "/users", GetUser },
+                    { "/cards", GetCards },
+                    { "/score", GetScore },
+                    { "/deck", GetDeck },
+                    { "/stats", GetStats },
+                    { "/tradings", GetTradings },
+                };
+            return getHandler;
+        }
+
         private static Dictionary<string, Func<RequestData, Response>> PostHandler()
         {
             Dictionary<string, Func<RequestData, Response>> postHandler = new Dictionary<string, Func<RequestData, Response>>
