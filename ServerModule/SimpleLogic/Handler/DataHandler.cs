@@ -20,7 +20,7 @@ namespace ServerModule.SimpleLogic.Handler
 
         private static NpgsqlConnection Connection()
         {
-            return PgDbConnect.GetConnection();
+            return Postgres.GetConnection();
         }
         // Basic usage of NpgSql
         // See: https://www.npgsql.org/doc/basic-usage.html
