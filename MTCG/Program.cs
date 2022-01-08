@@ -13,6 +13,7 @@ namespace MTCG
     //docker rm swe1db
 
     //docker run --name swe1db -e POSTGRES_USER=swe1user -e POSTGRES_PASSWORD=swe1pw -p 5432:5432 postgres
+
     // test private code https://stackoverflow.com/questions/9122708/unit-testing-private-methods-in-c-sharp
     internal class Program
     {
@@ -22,10 +23,13 @@ namespace MTCG
             Printer.CreateInstance(ConsolePrinter.Instance);
             IPrinter printer = Printer.Instance;
 
-            // Initialize Postgres Connection for faster performance (not required)
-            using (new PgDbConnect()) { }
-
             printer.WriteLine("Hello World!");
+
+            // Initialize Postgres Connection, Database and Tables for faster performance 
+            // using (new Postgres("localhost", "5432", "swe1user", "swe1pw", "swe1db")) { }
+            // not required, if using default, but for convenience
+            using (new Postgres()) { }
+
             // Initialize Mapping for Routing
             Mapping mapping = new Mapping();
             // Start Server
