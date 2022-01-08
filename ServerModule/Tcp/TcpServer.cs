@@ -27,16 +27,10 @@ namespace ServerModule.Tcp
             _mapping = mapping;
         }
 
-        public TcpServer(ITcpListener server)
+        public TcpServer(IMapping mapping)
         {
-            _mapping = new Mapping();
-            _server = server;
-        }
-
-        public TcpServer()
-        {
+            _mapping = mapping;
             _server = new TcpListener(10001);
-            _mapping = new Mapping();
         }
 
         ~TcpServer() => Stop();
