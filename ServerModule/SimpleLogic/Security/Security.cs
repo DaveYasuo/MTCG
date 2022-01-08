@@ -14,7 +14,6 @@ namespace ServerModule.SimpleLogic.Security
         // Using Hashset is more efficient with constant time
         // See: https://stackoverflow.com/a/17278638
         private readonly HashSet<string> _basicTokens = new();
-        //private readonly DataHandler _db = new();
 
         private readonly Dictionary<Method, List<string>> _protectedPaths = new()
         {
