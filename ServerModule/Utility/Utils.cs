@@ -12,7 +12,7 @@ namespace ServerModule.Utility
     }
     public enum Char
     {
-        WhiteSpace, NewLine, QuestionMark, Slash, Colon, DoubleQuote, OpenBracket
+        WhiteSpace, NewLine, QuestionMark, Slash, Colon, DoubleQuote, OpenBracket, Minus
     }
     public static class Utils
     {
@@ -24,8 +24,9 @@ namespace ServerModule.Utility
             { Char.Slash, '/' },
             { Char.Colon, ':' },
             { Char.DoubleQuote, '\"' },
-            { Char.OpenBracket, '[' }
-        };
+            { Char.OpenBracket, '[' },
+            { Char.Minus, '-' }
+    };
 
         /// <summary>
         /// Get the character with the given Enum key.
