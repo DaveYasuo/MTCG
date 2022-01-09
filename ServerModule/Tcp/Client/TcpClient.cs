@@ -125,7 +125,7 @@ namespace ServerModule.Tcp.Client
             if (contentLength > 0 && headers.ContainsKey("Content-Type"))
             {
                 StringBuilder body = new StringBuilder();
-                const int bufferSize = 1024;
+                int bufferSize = 1024;
                 char[] buffer = new char[bufferSize];
                 int bytesReadTotal = 0;
                 while (bytesReadTotal < contentLength)

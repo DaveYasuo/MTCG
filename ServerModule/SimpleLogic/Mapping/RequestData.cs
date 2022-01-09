@@ -1,28 +1,18 @@
 ﻿using System.Collections.Generic;
-using ServerModule.SimpleLogic.Security;
 
 namespace ServerModule.SimpleLogic.Mapping
 {
     public class RequestData
     {
-        public AuthToken Authentication { get; }
+        public string Username { get; }
         public string Payload { get; }
         public string PathVariable { get; }
         public Dictionary<string, string> RequestParam { get; }
 
-        public RequestData(AuthToken authentication, string payload, string pathVariable, string requestParam)
+        public RequestData(string username, string payload, string pathVariable, string requestParam)
         {
 
-
-            RequestParam = SetRequestParameter(requestParam);
-            PathVariable = pathVariable;
-            Payload = payload;
-            Authentication = authentication;
-        }
-
-        private static Dictionary<string, string> SetRequestParameter(string requestParam)
-        {
-            Dictionary<string, string> parameter = new Dictionary<string, string>();
+            Dictionary<string, string> temp = new Dictionary<string, string>();
             if (requestParam != null)
             {
                 string[] entries = requestParam.Split('&');
@@ -32,10 +22,14 @@ namespace ServerModule.SimpleLogic.Mapping
                     if (tmp.Length != 2) continue;
                     string key = tmp[0];
                     string val = tmp[1];
-                    parameter.Add(key, val);
+                    temp.Add(key, val);
                 }
             }
-            return parameter;
+            RequestParam = temp;
+            PathVariable = pathVariable;
+            Payload = payload;
+            Username = username;
         }
+
     }
 }
