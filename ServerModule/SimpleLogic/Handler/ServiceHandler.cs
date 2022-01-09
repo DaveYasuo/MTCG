@@ -47,12 +47,12 @@ namespace ServerModule.SimpleLogic.Handler
             if (line.Length != 2) return Response.Status(Status.Forbidden);
             string type = line[0];
             string token = line[1];
-            if (Authentication.Check(type, token))
-            {
-                // invoke the corresponding function
-                return _mapping.InvokeMethod(request.Method, request.Target, token[..^10], request.Payload, request.PathVariable, request.RequestParam);
-            }
-            return Response.Status(Status.Forbidden);
+            // Check if Authentication is valid
+            if (!Authentication.Check(type, token)) return Response.Status(Status.Forbidden);
+            // Get Token Details
+            AuthToken authToken = Authentication.GetTokenDetails(token);
+            // invoke the corresponding function
+            return _mapping.InvokeMethod(request.Method, request.Target, authToken, request.Payload, request.PathVariable, request.RequestParam);
         }
     }
 }

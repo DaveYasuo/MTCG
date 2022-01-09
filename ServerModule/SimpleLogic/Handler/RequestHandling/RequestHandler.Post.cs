@@ -5,6 +5,7 @@ using ServerModule.Database.Models;
 using ServerModule.Database.Schemas;
 using ServerModule.SimpleLogic.Mapping;
 using ServerModule.SimpleLogic.Responses;
+using ServerModule.SimpleLogic.Security;
 
 namespace ServerModule.SimpleLogic.Handler.RequestHandling
 {
@@ -37,33 +38,24 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
         /// <returns></returns>
         private static Response PostPackages(RequestData data)
         {
-            string payload = data.Payload;
-            // Get Json Array Length
-            // See: https://docs.microsoft.com/en-us/dotnet/api/system.text.json.jsonelement.getarraylength?view=net-6.0
-            //if (payload?["array"] is not JsonElement { ValueKind: JsonValueKind.Array } cards || cards.GetArrayLength() is not 5) return Response.Status(Status.BadRequest);
-
-            Credentials credentials = DataHandler.GetUser(data.Username);
+            Credentials credentials = DataHandler.GetUser(data.Authentication.Username);
             if (credentials == null) return Response.Status(Status.BadRequest);
-            // double check: once with username from AuthorizationToken (request), and once from database (role). Second can happen when manually alter db-table
-            if (data.Username.ToLower() != "admin" && credentials.Role.ToLower() != "admin")
-                return Response.Status(Status.Forbidden);
+            // Check if User has Admin Role
+            // triple check: once with username from AuthorizationToken (request), and once from database (role). Second can happen when manually alter db-table.
+            // Lastly check if Token from Request is equal to the token in the database
+            if (!data.Authentication.Username.Equals("admin") || credentials.Role != Role.Admin || !data.Authentication.Token.Equals(credentials.Token)) return Response.Status(Status.Forbidden);
             try
             {
+                string payload = data.Payload;
                 List<Card> package = JsonSerializer.Deserialize<List<Card>>(payload);
-                if (package == null || package.Count != 5) return Response.Status(Status.BadRequest);
-                //foreach (JsonElement card in cards.EnumerateArray())
-                //{
-                //    package.Add(new Card(card.GetProperty("Id").GetString(), card.GetProperty("Name").GetString(), card.GetProperty("Damage").GetDouble()));
-                //}
+                if (package is not { Count: 5 }) return Response.Status(Status.BadRequest);
+                return DataHandler.AddPackage(package) ? Response.PlainText("Package added", Status.Created) : Response.PlainText("Failed to create package", Status.BadRequest); ;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 return Response.Status(Status.BadRequest);
             }
-
-            return Response.Status(Status.BadRequest);
-            //return token != null ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token) : Response.PlainText("Invalid credentials", Status.Forbidden);
         }
 
         /// <summary>
@@ -79,7 +71,8 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             try
             {
                 User user = JsonSerializer.Deserialize<User>(payload);
-                string token = user?.Login();
+                if (user == null) return Response.Status(Status.BadRequest);
+                string token = user.Login();
                 return token != null
                     ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token)
                     : Response.PlainText("Invalid credentials", Status.Forbidden);
@@ -104,11 +97,8 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             try
             {
                 User user = JsonSerializer.Deserialize<User>(payload);
-                string token = user?.Register();
-                return token != null
-                    ? Response.PlainText("Register successful" + Environment.NewLine + "Token: " + token,
-                        Status.Created)
-                    : Response.PlainText("User already exists", Status.Conflict);
+                if (user == null) return Response.Status(Status.BadRequest);
+                return user.Register() ? Response.PlainText("Register successful", Status.Created) : Response.PlainText("User already exists", Status.Conflict);
             }
             catch (Exception)
             {
