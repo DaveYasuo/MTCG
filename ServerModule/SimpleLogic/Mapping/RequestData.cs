@@ -12,8 +12,6 @@ namespace ServerModule.SimpleLogic.Mapping
 
         public RequestData(AuthToken authentication, string payload, string pathVariable, string requestParam)
         {
-
-
             RequestParam = SetRequestParameter(requestParam);
             PathVariable = pathVariable;
             Payload = payload;
