@@ -144,7 +144,10 @@ namespace ServerModule.Database.PostgreSql
             CreateCredentials();
             CreateProfile();
             CreatePackages();
-            if (CreateCards() && CreateStore()) AlterCards();
+            CreateCards();
+            CreateStore();
+            // Add constraint foreign key later on
+            AlterCards();
         }
 
         public void PrintVersion()
@@ -163,12 +166,16 @@ namespace ServerModule.Database.PostgreSql
             // See: https://stackoverflow.com/a/22256451
             // Char Length for hashed Password SHA256
             // See: https://stackoverflow.com/a/247627
+            // Unique tokens
+            // See: https://www.postgresql.org/docs/9.2/ddl-constraints.html
             using var cmd = new NpgsqlCommand(@"
             CREATE TABLE IF NOT EXISTS credentials(
+                token VARCHAR(100),
                 username VARCHAR(100) NOT NULL,
                 password CHAR(64) NOT NULL,
                 role VARCHAR(10) NOT NULL,
-                PRIMARY KEY(username)
+                PRIMARY KEY(username),
+                UNIQUE (token)
             )", _connection);
             cmd.ExecuteNonQuery();
         }
@@ -201,25 +208,27 @@ namespace ServerModule.Database.PostgreSql
 
         private void CreatePackages()
         {
+            // using UUID 
+            // See: https://www.postgresql.org/docs/9.5/datatype.html
             using var cmd = new NpgsqlCommand(@"
             CREATE TABLE IF NOT EXISTS packages(
-                id SERIAL,
+                id UUID,
                 PRIMARY KEY(id)
             )", _connection);
             cmd.ExecuteNonQuery();
         }
 
-        private bool CreateCards()
+        private void CreateCards()
         {
             using var cmd = new NpgsqlCommand(@"
             CREATE TABLE IF NOT EXISTS cards(
-                id CHAR(36) NOT NULL,
+                id UUID,
                 card_name VARCHAR(30) NOT NULL,
                 damage REAL NOT NULL,
-                package INTEGER,
+                package UUID,
                 username VARCHAR(100),
                 deck BOOLEAN,
-                store CHAR(36),
+                store UUID,
                 PRIMARY KEY(id),
                 CONSTRAINT fk_package
                     FOREIGN KEY(package)
@@ -230,15 +239,15 @@ namespace ServerModule.Database.PostgreSql
                         REFERENCES profile(username)
                         ON DELETE CASCADE
             )", _connection);
-            return cmd.ExecuteNonQuery() != -1;
+            cmd.ExecuteNonQuery();
         }
 
-        private bool CreateStore()
+        private void CreateStore()
         {
             using var cmd = new NpgsqlCommand(@"
             CREATE TABLE IF NOT EXISTS store(
-                id CHAR(36),
-                card_id CHAR(36),
+                id UUID,
+                card_id UUID,
                 type VARCHAR(20),
                 damage REAL,
                 PRIMARY KEY(id),
@@ -246,22 +255,34 @@ namespace ServerModule.Database.PostgreSql
                     FOREIGN KEY(card_id)
                         REFERENCES cards(id)
             )", _connection);
-            return cmd.ExecuteNonQuery() != -1;
+            cmd.ExecuteNonQuery();
         }
 
         /// <summary>
-        /// Add store.id constraint to card.store
+        /// Add store.id constraint to card.store if constraint doesn't exists
         /// </summary>
         private void AlterCards()
         {
-            using var cmd = new NpgsqlCommand(@"
-            ALTER TABLE cards
-                ADD CONSTRAINT fk_store
-                    FOREIGN KEY(store)
-                        REFERENCES store(id)
-                        ON DELETE SET NULL
+            // Check if constraint already exists
+            // See: https://gist.github.com/vielhuber/bda4983431cd0ac7080b
+            using var selectCmd = new NpgsqlCommand(@"
+            SELECT COUNT(*)
+            FROM information_schema.constraint_column_usage
+            WHERE constraint_name = 'fk_store';
             ", _connection);
-            cmd.ExecuteNonQuery();
+            object result = selectCmd.ExecuteScalar();
+            if (result == null) return;
+            if ((long)result == 0)
+            {
+                using var alterCommand = new NpgsqlCommand(@"
+                    ALTER TABLE cards
+                    ADD CONSTRAINT fk_store
+                        FOREIGN KEY(store)
+                            REFERENCES store(id)
+                            ON DELETE SET NULL;
+                    ", _connection);
+                alterCommand.ExecuteNonQuery();
+            }
         }
 
         private void Dispose(bool disposing)
