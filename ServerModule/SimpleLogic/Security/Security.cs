@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,10 +12,12 @@ namespace ServerModule.SimpleLogic.Security
 {
     public class Security : ISecurity
     {
-        // Using Hashset is more efficient with constant time
+        // Using Hashset is more efficient with constant time // updated, not really thread safe
         // See: https://stackoverflow.com/a/17278638
-        private readonly HashSet<string> _basicTokens = new();
-
+        //private readonly HashSet<string> _basicTokens = new();
+        // using ConcurrentDictionary instead
+        // See: https://docs.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2?view=net-6.0
+        private readonly ConcurrentDictionary<string, byte> _basicTokens = new();
         private readonly Dictionary<Method, List<string>> _protectedPaths = new()
         {
             { Method.Get, new List<string>() { "/cards", "/deck", "/users", "/stats", "/score", "/tradings" } },
@@ -23,6 +26,10 @@ namespace ServerModule.SimpleLogic.Security
             { Method.Delete, new List<string>() { "/tradings" } },
         };
 
+        /// <summary>
+        /// Gets the Dictionary with the methods and secured paths.
+        /// </summary>
+        /// <returns>Returns the securedPaths of the methods as a Dictionary</returns>
         public Dictionary<Method, List<string>> SecuredPaths()
         {
             return _protectedPaths;
@@ -38,11 +45,7 @@ namespace ServerModule.SimpleLogic.Security
         {
             // Authorization Header
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
-            bool ewr = type == "Basic";
-            bool awer = token.EndsWith("-mtcgToken");
-            bool rwer = _basicTokens.Contains(token);
-            bool wer =DataHandler.ContainsToken(token);
-            return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.Contains(token) && DataHandler.ContainsToken(token);
+            return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.ContainsKey(token) && DataHandler.ContainsToken(token);
         }
 
         /// <summary>
@@ -70,6 +73,11 @@ namespace ServerModule.SimpleLogic.Security
             return AddToken(token, user.Username) ? token : null;
         }
 
+        /// <summary>
+        /// Reads the token and parse the username out of it.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <returns>An AuthToken object that contains username and token</returns>
         public AuthToken GetTokenDetails(string token)
         {
             int indexOfToken = token.LastIndexOf("-mtcgToken", StringComparison.Ordinal);
@@ -77,11 +85,15 @@ namespace ServerModule.SimpleLogic.Security
             return new AuthToken(username, token);
         }
 
+        /// <summary>
+        /// Add the token to the dictionary and to the database.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="username"></param>
+        /// <returns></returns>
         private bool AddToken(string token, string username)
         {
-            if (!DataHandler.AddTokenToUser(token, username)) return false;
-            _basicTokens.Add(token);
-            return true;
+            return _basicTokens.TryAdd(token, 1) && DataHandler.AddTokenToUser(token, username);
         }
 
         /// <summary>
@@ -91,6 +103,11 @@ namespace ServerModule.SimpleLogic.Security
         /// <returns>Returns the generated token</returns>
         private static string GenerateToken(string username) => username + "-mtcgToken";
 
+        /// <summary>
+        /// Generates a SHA256 Hash with the given string.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <returns>Returns the hash of the string</returns>
         private static string GenerateHash(string password)
         {
             // Compute Hash
@@ -107,6 +124,7 @@ namespace ServerModule.SimpleLogic.Security
             // Return the hexadecimal string.
             return sBuilder.ToString();
         }
+
         /// <summary>
         /// Check given username and password with those in the database
         /// </summary>
@@ -115,6 +133,8 @@ namespace ServerModule.SimpleLogic.Security
         /// <returns>True if valid, else false.</returns>
         public bool CheckCredentials(string username, string password)
         {
+            // Compare Hash
+            // See: https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.hashalgorithm.computehash?view=net-6.0
             Credentials check = DataHandler.GetUser(username);
             if (check == null) return false;
             // Create a StringComparer an compare the hashes.
