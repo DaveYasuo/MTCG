@@ -1,19 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
+using DebugAndTrace;
 using ServerModule.SimpleLogic.Responses;
 
 namespace ServerModule.Utility
 {
     public enum Method
     {
-        Get, Post, Put, Delete, Patch, Error
+        Get,
+        Post,
+        Put,
+        Delete,
+        Patch,
+        Error
     }
+
     public enum Char
     {
-        WhiteSpace, NewLine, QuestionMark, Slash, Colon, DoubleQuote, OpenBracket, Minus
+        WhiteSpace,
+        NewLine,
+        QuestionMark,
+        Slash,
+        Colon,
+        DoubleQuote,
+        OpenBracket,
+        Minus
     }
+
     public static class Utils
     {
         private static readonly Dictionary<Char, char> Characters = new()
@@ -26,7 +42,7 @@ namespace ServerModule.Utility
             { Char.DoubleQuote, '\"' },
             { Char.OpenBracket, '[' },
             { Char.Minus, '-' }
-    };
+        };
 
         /// <summary>
         /// Get the character with the given Enum key.
@@ -36,11 +52,8 @@ namespace ServerModule.Utility
         public static char GetChar(Char key)
         {
             // See: https://www.dotnetperls.com/static-dictionary
-            if (Characters.TryGetValue(key, out char value))
-            {
-                return value;
-            }
-            throw new NotImplementedException();
+            Characters.TryGetValue(key, out char value);
+            return value;
         }
 
         public static Method GetMethod(string method)
@@ -71,7 +84,6 @@ namespace ServerModule.Utility
             try
             {
                 var obj = Activator.CreateInstance(type);
-
                 foreach (var kv in dict)
                 {
                     PropertyInfo prop = type.GetProperty(kv.Key);
@@ -103,7 +115,7 @@ namespace ServerModule.Utility
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Printer.Instance.WriteLine(e.Message);
                 throw;
             }
         }
@@ -112,6 +124,22 @@ namespace ServerModule.Utility
         {
             return (T)GetObject(dict, typeof(T));
         }
-    }
 
+        /// <summary>
+        /// Add all property names with the corresponding value into a string.
+        /// </summary>
+        /// <param name="myObj"></param>
+        /// <returns>Returns the string with the values or "" if the object is empty/null</returns>
+        public static string GetProperties(this object myObj)
+        {
+            // Using reflection
+            // See: https://stackoverflow.com/a/19823887
+            StringBuilder stringBuilder = new StringBuilder();
+            foreach (PropertyInfo prop in myObj.GetType().GetProperties())
+            {
+                stringBuilder.AppendLine(prop.Name + ": " + prop.GetValue(myObj, null));
+            }
+            return stringBuilder.ToString();
+        }
+    }
 }
