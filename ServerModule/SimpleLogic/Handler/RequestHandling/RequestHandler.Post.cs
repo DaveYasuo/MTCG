@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using DebugAndTrace;
 using ServerModule.Database.Models;
 using ServerModule.Database.Schemas;
 using ServerModule.SimpleLogic.Mapping;
@@ -13,7 +14,13 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
     {
         private static Response PostTransactionPackages(RequestData requestData)
         {
-            throw new NotImplementedException();
+            const int packageCost = 5;
+            string username = requestData.Authentication.Username;
+            long coins = DataHandler.GetUserCoins(username);
+            if (coins is -1) return Response.Status(Status.InternalServerError);
+            if (coins - packageCost >= 0)
+                return DataHandler.AcquirePackage(username, packageCost) ? Response.PlainText("Package acquired", Status.Created) : Response.PlainText("Could not acquire package", Status.BadRequest);
+            return Response.PlainText("Not enough coins", Status.BadRequest);
         }
 
         private static Response PostTradings(RequestData requestData)
@@ -53,7 +60,7 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Printer.Instance.WriteLine(e.Message);
                 return Response.Status(Status.BadRequest);
             }
         }
@@ -79,7 +86,7 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Printer.Instance.WriteLine(e.Message);
                 return Response.PlainText("Invalid credentials", Status.Forbidden);
             }
         }
@@ -93,15 +100,15 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
         {
             string payload = requestData.Payload;
             if (payload == null) return Response.Status(Status.BadRequest);
-            //User newUser = payload.GetObject<User>();
             try
             {
                 User user = JsonSerializer.Deserialize<User>(payload);
                 if (user == null) return Response.Status(Status.BadRequest);
                 return user.Register() ? Response.PlainText("Register successful", Status.Created) : Response.PlainText("User already exists", Status.Conflict);
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Printer.Instance.WriteLine(e.Message);
                 return Response.Status(Status.BadRequest);
             }
         }
