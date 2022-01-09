@@ -28,35 +28,61 @@ namespace ServerModule.SimpleLogic.Security
             return _protectedPaths;
         }
 
-        // Authorization Header
-        // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
+        /// <summary>
+        /// Checks if User is logged in and is also (still) in the database
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="token"></param>
+        /// <returns>True if is logged in, else false</returns>
         public bool Authenticate(string type, string token)
         {
-            return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.Contains(token);
+            // Authorization Header
+            // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
+            bool ewr = type == "Basic";
+            bool awer = token.EndsWith("-mtcgToken");
+            bool rwer = _basicTokens.Contains(token);
+            bool wer =DataHandler.ContainsToken(token);
+            return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.Contains(token) && DataHandler.ContainsToken(token);
         }
 
-        public string Register(User user)
+        /// <summary>
+        /// Register User to the database.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>Returns true if register is success else false.</returns>
+        public bool Register(User user)
         {
             // check if User already exists
-            if (DataHandler.GetUser(user.Username) != null) return null;
+            if (DataHandler.GetUser(user.Username) != null) return false;
             string pwHash = GenerateHash(user.Password);
-            Credentials newUser = user.Username.ToLower() == "admin" ? new Credentials(user.Username, pwHash, "Admin") : new Credentials(user.Username, pwHash, "User");
-            // check if User is added successfully to the database
-            if (!DataHandler.AddUser(newUser)) return null;
-            string token = GenerateToken(user.Username);
-            AddToken(token);
-            return token;
+            // i think authToken should be generated when trying to log in
+            //string token = GenerateToken(user.Username);
+            Credentials newUser = user.Username == "admin"
+                ? new Credentials(null, user.Username, pwHash, Role.Admin)
+                : new Credentials(null, user.Username, pwHash, Role.User);
+            return DataHandler.AddUser(newUser);
         }
 
         public string Login(User user)
         {
             if (!CheckCredentials(user.Username, user.Password)) return null;
             string token = GenerateToken(user.Username);
-            AddToken(token);
-            return token;
+            return AddToken(token, user.Username) ? token : null;
         }
 
-        private void AddToken(string token) => _basicTokens.Add(token);
+        public AuthToken GetTokenDetails(string token)
+        {
+            int indexOfToken = token.LastIndexOf("-mtcgToken", StringComparison.Ordinal);
+            string username = token[..indexOfToken];
+            return new AuthToken(username, token);
+        }
+
+        private bool AddToken(string token, string username)
+        {
+            if (!DataHandler.AddTokenToUser(token, username)) return false;
+            _basicTokens.Add(token);
+            return true;
+        }
 
         /// <summary>
         /// Generates a "username"-mtcgToken
