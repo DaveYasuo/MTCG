@@ -32,7 +32,7 @@ namespace ServerModule.Docker
             SetEnvironmentVariable(Database, GetCommand(containerName, Database), "swe1db");
 
             // Optional get the first matched exposed Port of the docker container
-            string rawPort = ExecuteCommand( $"docker ps --filter \"name={containerName}\" --format \"{{{{.Ports}}}}\"");
+            string rawPort = ExecuteCommand($"docker ps --filter \"name={containerName}\" --format \"{{{{.Ports}}}}\"");
             ParsePort(rawPort, out string postgresPort);
             SetEnvironmentVariable(Port, null, postgresPort);
         }
@@ -122,8 +122,9 @@ namespace ServerModule.Docker
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine("Cannot read Environment Variables of Docker container.");
-                Console.Error.WriteLine(e.Message);
+                Printer.Instance.WriteLine("Cannot read Environment Variables of Docker container.");
+                Printer.Instance.WriteLine(e.Message);
+
                 throw;
             }
             return envData;
