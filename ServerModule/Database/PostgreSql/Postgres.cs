@@ -83,7 +83,7 @@ namespace ServerModule.Database.PostgreSql
             }
             catch (Exception e)
             {
-                Debug.WriteLine(e.Message);
+                Printer.Instance.WriteLine(e.Message);
             }
             Dispose();
         }
@@ -272,17 +272,15 @@ namespace ServerModule.Database.PostgreSql
             ", _connection);
             object result = selectCmd.ExecuteScalar();
             if (result == null) return;
-            if ((long)result == 0)
-            {
-                using var alterCommand = new NpgsqlCommand(@"
+            if ((long)result != 0) return;
+            using var alterCommand = new NpgsqlCommand(@"
                     ALTER TABLE cards
                     ADD CONSTRAINT fk_store
                         FOREIGN KEY(store)
                             REFERENCES store(id)
                             ON DELETE SET NULL;
                     ", _connection);
-                alterCommand.ExecuteNonQuery();
-            }
+            alterCommand.ExecuteNonQuery();
         }
 
         private void Dispose(bool disposing)

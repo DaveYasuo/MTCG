@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Threading;
+using DebugAndTrace;
 
 namespace MTCG.Data.Cards
 {
@@ -28,7 +29,8 @@ namespace MTCG.Data.Cards
             catch (Exception e)
             {
                 Thread.CurrentThread.CurrentUICulture = new CultureInfo("en-us");
-                Console.WriteLine(e);
+                Printer.Instance.WriteLine(e.Message);
+
                 throw;
             }
         }

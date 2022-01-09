@@ -26,9 +26,11 @@ namespace MTCG
             printer.WriteLine("Hello World!");
 
             // Initialize Postgres Connection, Database and Tables for faster performance 
-            // using (new Postgres("localhost", "5432", "swe1user", "swe1pw", "swe1db")) { }
+            printer.WriteLine("Starting DB");
+            using (new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db")) { }
             // not required, if using default, but for convenience
-            using (new Postgres()) { }
+            //using (new Postgres()) { }
+            printer.WriteLine("DB started");
 
             // Initialize Mapping for Routing
             Mapping mapping = new Mapping();
