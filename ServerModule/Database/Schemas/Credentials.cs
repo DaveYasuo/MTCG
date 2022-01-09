@@ -38,5 +38,3 @@ namespace ServerModule.Database.Schemas
         };
     }
 }
-
-// help meee
