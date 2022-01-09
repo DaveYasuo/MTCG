@@ -1,11 +1,8 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Runtime.CompilerServices;
 using DebugAndTrace;
 using Npgsql;
-using NpgsqlTypes;
 using ServerModule.Database.Models;
 using ServerModule.Database.PostgreSql;
 using ServerModule.Database.Schemas;
@@ -13,69 +10,29 @@ using ServerModule.Database.Schemas;
 namespace ServerModule.SimpleLogic.Handler
 {
     /**
-     * Datenbank Abfrage wird hier durchgeführt. Die Connection sollte mithilfe des pgDbConnect Klasse hergestellt werden.
+     * Datenbank Abfrage wird hier durchgeführt. Die Connection sollte mithilfe des Postgres Klasse hergestellt werden.
      * Alle Funktionen betreffend Abfrage wird hier eingefügt.
      **/
     internal static class DataHandler
     {
-        private static NpgsqlConnection Connection()
-        {
-            return Postgres.GetConnection();
-        }
         // Basic usage of NpgSql
         // See: https://www.npgsql.org/doc/basic-usage.html
         // Usage of transactions
         // See: https://stackoverflow.com/a/55434778
 
-        //public void InsertPackage(Package package)
-        //{
-        //    using NpgsqlCommand command = new NpgsqlCommand();
-        //    command.Connection = Connection;
-        //    const string sql = "INSERT INTO package(id,name,damage) VALUES(@id,@name,@damage)";
-        //    command.CommandText = sql;
-        //    command.Parameters.AddWithValue("id", package.Id);
-        //    command.Parameters.AddWithValue("name", package.Username);
-        //    command.Parameters.AddWithValue("damage", package.Damage);
-        //    command.Prepare();
-        //    command.ExecuteNonQuery();
-        //}
-
-        /// <summary>
-        /// Get Credentials Object from database. Contains of id(token), username, password, role(admin/user)
-        /// </summary>
-        /// <param name="username"></param>
-        /// <returns>Returns null if failed, else Credentials object</returns>
-        public static Credentials GetUser(string username)
+        private static NpgsqlConnection Connection()
         {
-            using NpgsqlConnection conn = Connection();
-            try
-            {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM credentials WHERE username=@p1", conn);
-                cmd.Parameters.AddWithValue("p1", username);
-                cmd.Prepare();
-                using NpgsqlDataReader reader = cmd.ExecuteReader();
-                if (!reader.Read()) return null;
-                Credentials user = new Credentials(
-                    reader.SafeGetString("token"),
-                    reader.SafeGetString("username"),
-                    reader.SafeGetString("password"),
-                    reader.SafeGetString("role")
-                );
-                return reader.Read() ? null : user;
-            }
-            catch (Exception e)
-            {
-                Printer.Instance.WriteLine(e);
-                return null;
-            }
+            return Postgres.GetConnection();
         }
+
         // Handling Null Data
         // See: https://stackoverflow.com/a/1772037
-        public static string SafeGetString(this NpgsqlDataReader reader, string columnName)
+        // And: https://stackoverflow.com/a/52204396
+        public static T SafeGet<T>(this NpgsqlDataReader reader, string columnName)
         {
-            int colIndex = reader.GetOrdinal(columnName);
-            return !reader.IsDBNull(colIndex) ? reader.GetString(colIndex) : string.Empty;
+            return reader.IsDBNull(columnName) ? default : reader.GetFieldValue<T>(columnName);
         }
+
 
         /// <summary>
         /// Add the given Credentials object to the database
@@ -116,8 +73,9 @@ namespace ServerModule.SimpleLogic.Handler
                 transaction.Commit();
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Printer.Instance.WriteLine(e.Message);
                 transaction.Rollback();
                 return false;
             }
@@ -131,7 +89,7 @@ namespace ServerModule.SimpleLogic.Handler
         public static bool ContainsToken(string token)
         {
             using NpgsqlConnection conn = Connection();
-            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM credentials WHERE token=@p1", conn);
+            using NpgsqlCommand cmd = new NpgsqlCommand("SELECT token FROM credentials WHERE token=@p1", conn);
             cmd.Parameters.AddWithValue("p1", token);
             cmd.Prepare();
             return cmd.ExecuteScalar() != null;
@@ -167,13 +125,12 @@ namespace ServerModule.SimpleLogic.Handler
                     cardCmd.Parameters.AddWithValue("p5", false);
                     cardCmd.ExecuteNonQuery();
                 }
-
                 transaction.Commit();
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Printer.Instance.WriteLine(e.Message);
                 transaction.Rollback();
                 return false;
             }
@@ -191,16 +148,290 @@ namespace ServerModule.SimpleLogic.Handler
             using NpgsqlTransaction transaction = conn.BeginTransaction();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE credentials SET token=@p1 WHERE username=@p2", conn);
+                using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE credentials SET token=@p1 WHERE username=@p2", conn, transaction);
                 cmd.Parameters.AddWithValue("p1", token);
                 cmd.Parameters.AddWithValue("p2", username);
                 cmd.Prepare();
-                bool result = cmd.ExecuteNonQuery() != -1;
-                transaction.Commit();
-                return result;
+                int affectedRows = cmd.ExecuteNonQuery();
+                if (affectedRows != 0 && affectedRows != -1)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+                transaction.Rollback();
+                return false;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Printer.Instance.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get Credentials Object from database. Contains of id(token), username, password, role(admin/user)
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns null if failed, else Credentials object</returns>
+        public static Credentials GetUser(string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT token, username, password, role FROM credentials WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                Credentials user = new Credentials(
+                    reader.SafeGet<string>("token"),
+                    reader.SafeGet<string>("username"),
+                    reader.SafeGet<string>("password"),
+                    reader.SafeGet<string>("role")
+                );
+                return reader.Read() ? null : user;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get Profile object from one user in the database. Contains of username, name, bio, image, elo, wins, losses, draws, coins.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns the profile object on success, else null</returns>
+        public static Profile GetUserProfile(string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, name, bio, image, elo, wins, losses, draws, coins FROM profile WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                Profile user = new Profile(
+                    reader.SafeGet<string>("username"),
+                    reader.SafeGet<string>("name"),
+                    reader.SafeGet<string>("bio"),
+                    reader.SafeGet<string>("image"),
+                    reader.SafeGet<int>("elo"),
+                    reader.SafeGet<int>("wins"),
+                    reader.SafeGet<int>("losses"),
+                    reader.SafeGet<int>("draws"),
+                    reader.SafeGet<long>("coins")
+                );
+                return reader.Read() ? null : user;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get coins of a specific user from the database
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns the coins or -1 if an error occurred</returns>
+        public static long GetUserCoins(string username)
+        {
+            // Why I use extra function for getting only coins, instead of getting whole user profile
+            // See: https://stackoverflow.com/a/67380
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT coins FROM profile WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return -1;
+                long coins = reader.SafeGet<long>("coins");
+                return reader.Read() ? -1 : coins;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return -1;
+            }
+        }
+
+        public static bool AcquirePackage(string username, int packageCost)
+        {
+
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                // Check again if user has enough coins
+                long coins = GetUserCoins(username);
+                if (coins is -1 || coins - packageCost < 0)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+                const string coinsSql = "UPDATE profile SET coins=@p1 WHERE username=@p2";
+                using NpgsqlCommand profileCmd = new NpgsqlCommand(coinsSql, conn, transaction);
+                profileCmd.Parameters.AddWithValue("p1", coins - packageCost);
+                profileCmd.Parameters.AddWithValue("p2", username);
+                profileCmd.Prepare();
+                bool result = profileCmd.ExecuteNonQuery() == 1;
+                if (!result) return false;
+
+                // Select first created package 
+                // See: https://kb.objectrocket.com/postgresql/how-to-use-the-postgres-to-select-first-record-1271
+                using var packageIdCmd = new NpgsqlCommand("SELECT id from packages LIMIT 1", conn, transaction);
+                packageIdCmd.Prepare();
+                object pkIdResult = packageIdCmd.ExecuteScalar();
+                if (pkIdResult == null)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+                Guid packageId = (Guid)pkIdResult;
+
+                // Update all cards with the associated package id: add username to the cards
+                using var cardCmd = new NpgsqlCommand("UPDATE cards SET username=@p1 WHERE package=@p2", conn, transaction);
+                cardCmd.Parameters.AddWithValue("p1", username);
+                cardCmd.Parameters.AddWithValue("p2", packageId);
+                cardCmd.Prepare();
+                if (cardCmd.ExecuteNonQuery() != 5)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+
+                // Delete package now
+                using var packageDeleteCmd = new NpgsqlCommand("DELETE FROM packages WHERE id=@p1", conn, transaction);
+                packageDeleteCmd.Parameters.AddWithValue("p1", packageId);
+                if (packageDeleteCmd.ExecuteNonQuery() == 1)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+                transaction.Rollback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        public static List<Card> GetUserCards(string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                List<Card> cards = new List<Card>();
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Card card = new Card(
+                        reader.SafeGet<Guid>("id"),
+                        reader.SafeGet<string>("card_name"),
+                        reader.SafeGet<double>("damage")
+                    );
+                    cards.Add(card);
+                }
+                return cards;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Query db to get user's deck if true, else get all cards that are not in deck
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="inDeck"></param>
+        /// <returns>Returns the queried Cards as a List, or null if failed</returns>
+        public static List<Card> GetUserDeck(string username, bool inDeck)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                List<Card> cards = new List<Card>();
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1 AND deck=@p2", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Parameters.AddWithValue("p2", inDeck);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    Card card = new Card(
+                        reader.SafeGet<Guid>("id"),
+                        reader.SafeGet<string>("card_name"),
+                        reader.SafeGet<double>("damage")
+                    );
+                    cards.Add(card);
+                }
+                return cards;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        public static bool UpdateDeck(List<Guid> deck, string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                // Check if card is in store
+                foreach (Guid cardId in deck)
+                {
+                    using NpgsqlCommand checkCard = new NpgsqlCommand("SELECT id FROM store WHERE card_id=@p1", conn);
+                    checkCard.Parameters.AddWithValue("p1", cardId);
+                    checkCard.Prepare();
+                    if (checkCard.ExecuteScalar() == null) continue;
+                    transaction.Rollback();
+                    return false;
+                }
+
+                // Set all deck cards of user to false
+                using NpgsqlCommand setFalseCmd = new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND deck=@p3", conn, transaction);
+                setFalseCmd.Parameters.AddWithValue("p1", false);
+                setFalseCmd.Parameters.AddWithValue("p2", username);
+                setFalseCmd.Parameters.AddWithValue("p3", true);
+                setFalseCmd.Prepare();
+                setFalseCmd.ExecuteNonQuery();
+
+                // now set the given cards to true
+                foreach (Guid cardId in deck)
+                {
+                    using NpgsqlCommand setTrueCmd = new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND id=@p3", conn, transaction);
+                    setTrueCmd.Parameters.AddWithValue("p1", true);
+                    setTrueCmd.Parameters.AddWithValue("p2", username);
+                    setTrueCmd.Parameters.AddWithValue("p3", cardId);
+                    setTrueCmd.Prepare();
+                    // if no or more than one row is affected means, the user doesn't own the card or an error occurred
+                    if (setTrueCmd.ExecuteNonQuery() == 1) continue;
+                    transaction.Rollback();
+                    return false;
+                }
+                transaction.Commit();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
                 transaction.Rollback();
                 return false;
             }
