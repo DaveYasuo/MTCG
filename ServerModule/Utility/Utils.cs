@@ -16,7 +16,7 @@ namespace ServerModule.Utility
     }
     public static class Utils
     {
-        private static readonly Dictionary<Char, char> Characters = new()
+        private static readonly Dictionary<Enum, char> Characters = new()
         {
             { Char.WhiteSpace, ' ' },
             { Char.NewLine, '\n' },

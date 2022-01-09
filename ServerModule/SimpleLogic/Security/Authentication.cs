@@ -21,23 +21,12 @@ namespace ServerModule.SimpleLogic.Security
             return Security.SecuredPaths()[method].Contains(path);
         }
 
-        /// <summary>
-        /// Checks if User is logged in
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
         public static bool Check(string type, string token)
         {
             return Security.Authenticate(type, token);
         }
 
-        /// <summary>
-        /// Registering User
-        /// </summary>
-        /// <param name="user"></param>
-        /// <returns>True on success, else false.</returns>
-        public static bool Register(User user)
+        public static string Register(User user)
         {
             return Security.Register(user);
         }
@@ -45,11 +34,6 @@ namespace ServerModule.SimpleLogic.Security
         public static string Login(User user)
         {
             return Security.Login(user);
-        }
-
-        public static AuthToken GetTokenDetails(string token)
-        {
-            return Security.GetTokenDetails(token);
         }
     }
 }

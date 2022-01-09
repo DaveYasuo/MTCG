@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using ServerModule.SimpleLogic.Handler;
 using ServerModule.SimpleLogic.Responses;
-using ServerModule.SimpleLogic.Security;
 using ServerModule.Utility;
 using RequestHandler = ServerModule.SimpleLogic.Handler.RequestHandling.RequestHandler;
 
@@ -24,9 +23,9 @@ namespace ServerModule.SimpleLogic.Mapping
             // See: https://stackoverflow.com/a/1167367
             List<Method> methods = new List<Method>(Enum.GetValues<Method>());
 
-            // Delete unsupported methods // ignored
-            //methods.Remove(Method.Patch);
-            //methods.Remove(Method.Error);
+            // Delete unsupported methods
+            methods.Remove(Method.Patch);
+            methods.Remove(Method.Error);
 
             foreach (Method method in methods)
             {
@@ -39,9 +38,9 @@ namespace ServerModule.SimpleLogic.Mapping
             return MappingPath[method].ContainsKey(path);
         }
 
-        public Response InvokeMethod(Method method, string path, AuthToken token, string payload, string pathVariable, string requestParam)
+        public Response InvokeMethod(Method method, string path, string username, string payload, string pathVariable, string requestParam)
         {
-            return MappingPath[method][path].Invoke(new RequestData(token, payload, pathVariable, requestParam));
+            return MappingPath[method][path].Invoke(new RequestData(username, payload, pathVariable, requestParam));
         }
     }
 }
