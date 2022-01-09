@@ -26,6 +26,30 @@
             Image = "No Image";
         }
 
+        /// <summary>
+        /// Use this ctor for getting data from profile table
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="name"></param>
+        /// <param name="bio"></param>
+        /// <param name="image"></param>
+        /// <param name="elo"></param>
+        /// <param name="wins"></param>
+        /// <param name="losses"></param>
+        /// <param name="draws"></param>
+        /// <param name="coins"></param>
+        public Profile(string username, string name, string bio, string image, int elo, int wins, int losses, int draws, long coins)
+        {
+            Username = username;
+            Name = name;
+            Bio = bio;
+            Image = image;
+            Elo = elo;
+            Wins = wins;
+            Losses = losses;
+            Draws = draws;
+            Coins = coins;
+        }
         //public Profile(string username, int elo, int wins, int losses, int draws)
         //{
         //    Username = username;
@@ -38,20 +62,6 @@
         //    Image = string.Empty;
         //}
 
-        //public Profile(
-        //    string username, int elo, int wins, int losses, int draws, long coins,
-        //    string name, string bio, string image
-        //)
-        //{
-        //    Username = username;
-        //    Name = name;
-        //    Bio = bio;
-        //    Image = image;
-        //    Elo = elo;
-        //    Wins = wins;
-        //    Losses = losses;
-        //    Draws = draws;
-        //    Coins = coins;
-        //}
+
     }
 }
