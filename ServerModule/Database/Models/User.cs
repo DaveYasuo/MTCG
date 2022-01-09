@@ -20,7 +20,7 @@ namespace ServerModule.Database.Models
             Password = password;
         }
 
-        public string Register()
+        public bool Register()
         {
             return Authentication.Register(this);
         }
