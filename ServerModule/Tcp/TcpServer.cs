@@ -47,6 +47,7 @@ namespace ServerModule.Tcp
             // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
             _tokenSource = new CancellationTokenSource();
             _server.Start();
+            _printer.WriteLine("Ready to accept clients");
             Console.CancelKeyPress += (_, e) =>
             {
                 Stop();
@@ -82,10 +83,10 @@ namespace ServerModule.Tcp
                         client.Close();
                     }, token);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     // Prevent SocketException when break
-                    // _printer.WriteLine($"Exc: {exception.Message}");
+                    Printer.Instance.WriteLine(e.Message);
                 }
             }
         }
@@ -129,10 +130,10 @@ namespace ServerModule.Tcp
                     //_printer.WriteLine($"Wait for Task {task.Id}");
                     _printer.WriteLine(task.Wait(500) ? "Task is completed" : "Task failed.");
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     // Prevent TaskCanceledException
-                    // _printer.WriteLine($"Exc: {exception.Message}");
+                    Printer.Instance.WriteLine(e.Message);
                 }
             }
 
