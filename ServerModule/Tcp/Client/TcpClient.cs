@@ -79,8 +79,6 @@ namespace ServerModule.Tcp.Client
                 /*
                  * target can have multiple "/", so check if those paths exists 
                  * only supported up to two "/"
-                 * example: "/transactions/packages" -> pathVariable = "packages"; target = "/transactions"
-                 * example: "/transactions"->pathVariable = "transactions"; target = ""
                  */
                 if (!mapping.Contains(method, target))
                 {
@@ -169,7 +167,11 @@ namespace ServerModule.Tcp.Client
             // See: https://docs.microsoft.com/en-us/dotnet/api/system.datetime.getdatetimeformats?view=net-6.0
             // and: https://docs.microsoft.com/en-us/dotnet/standard/base-types/standard-date-and-time-format-strings
             writer.WriteLine("Date: " + DateTime.Now.ToString("R") + "");
-
+            // Check if additional header should be sent
+            if (response.Headers is { Count: > 0 } headers)
+                foreach ((string key, string value) in headers)
+                    writer.WriteLine($"{key}: {value}");
+            // Check if response has body
             if (!response.ContainsBody) writer.WriteLine();
             else
             {
