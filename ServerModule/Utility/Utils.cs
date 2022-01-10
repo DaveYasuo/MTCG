@@ -15,6 +15,7 @@ namespace ServerModule.Utility
         Put,
         Delete,
         Patch,
+        Head,
         Error
     }
 
@@ -66,6 +67,7 @@ namespace ServerModule.Utility
                 "put" => Method.Put,
                 "delete" => Method.Delete,
                 "patch" => Method.Patch,
+                "head" => Method.Head,
                 _ => Method.Error
             };
         }

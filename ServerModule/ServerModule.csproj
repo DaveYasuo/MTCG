@@ -19,4 +19,8 @@
     <ProjectReference Include="..\DebugAndTrace\DebugAndTrace.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="BattleLogic\" />
+  </ItemGroup>
+
 </Project>
