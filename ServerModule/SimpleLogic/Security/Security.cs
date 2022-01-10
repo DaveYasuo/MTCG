@@ -17,7 +17,10 @@ namespace ServerModule.SimpleLogic.Security
         //private readonly HashSet<string> _basicTokens = new();
         // using ConcurrentDictionary instead
         // See: https://docs.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2?view=net-6.0
-        private readonly ConcurrentDictionary<string, byte> _basicTokens = new();
+        /// <summary>
+        /// string contains user token, bool states that user is in game or not
+        /// </summary>
+        private readonly ConcurrentDictionary<string, bool> _basicTokens = new();
         private readonly Dictionary<Method, List<string>> _protectedPaths = new()
         {
             { Method.Get, new List<string>() { "/cards", "/deck", "/users", "/stats", "/score", "/tradings" } },
@@ -66,6 +69,11 @@ namespace ServerModule.SimpleLogic.Security
             return DataHandler.AddUser(newUser);
         }
 
+        /// <summary>
+        /// Checks credentials and add it to the Session (Dictionary)
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>Returns the authorization token by success, else null</returns>
         public string Login(User user)
         {
             if (!CheckCredentials(user.Username, user.Password)) return null;
@@ -93,7 +101,7 @@ namespace ServerModule.SimpleLogic.Security
         /// <returns></returns>
         private bool AddToken(string token, string username)
         {
-            return _basicTokens.TryAdd(token, 1) && DataHandler.AddTokenToUser(token, username);
+            return _basicTokens.TryAdd(token, false) && DataHandler.AddTokenToUser(token, username);
         }
 
         /// <summary>
@@ -141,6 +149,17 @@ namespace ServerModule.SimpleLogic.Security
             StringComparer comparer = StringComparer.OrdinalIgnoreCase;
             string pwHash = GenerateHash(password);
             return comparer.Compare(pwHash, check.Password) == 0;
+        }
+
+        /// <summary>
+        /// If trying to queue user to game set boolean to true, else false. Once user is in game, he cannot be in another game until the game has finished.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="setStatus"></param>
+        /// <returns>Bool indicates if update was success (true) or failed (false)</returns>
+        public bool UpdateGameStatus(string token, bool setStatus)
+        {
+            return _basicTokens.TryUpdate(token, setStatus, !setStatus);
         }
     }
 }
