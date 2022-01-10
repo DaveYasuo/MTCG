@@ -56,7 +56,7 @@ namespace ServerModule.SimpleLogic.Security
         public bool Register(User user)
         {
             // check if User already exists
-            if (DataHandler.GetUser(user.Username) != null) return false;
+            if (DataHandler.GetCredentials(user.Username) != null) return false;
             string pwHash = GenerateHash(user.Password);
             // i think authToken should be generated when trying to log in
             //string token = GenerateToken(user.Username);
@@ -135,7 +135,7 @@ namespace ServerModule.SimpleLogic.Security
         {
             // Compare Hash
             // See: https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.hashalgorithm.computehash?view=net-6.0
-            Credentials check = DataHandler.GetUser(username);
+            Credentials check = DataHandler.GetCredentials(username);
             if (check == null) return false;
             // Create a StringComparer an compare the hashes.
             StringComparer comparer = StringComparer.OrdinalIgnoreCase;
