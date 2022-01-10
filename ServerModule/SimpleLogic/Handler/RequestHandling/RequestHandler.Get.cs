@@ -55,12 +55,17 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             return stats is null ? Response.Status(Status.BadRequest) : Response.Json(stats);
         }
 
+        /// <summary>
+        /// Gets the top player and user scoreboard from database.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Json response object where json can be empty, or server error response</returns>
         private static Response GetScore(RequestData arg)
         {
             string username = arg.Authentication.Username;
             if (username is null) return Response.Status(Status.BadRequest);
-            List<IStats> stats = DataHandler.GetUserScoreboard(username);
-            return stats is null ? Response.Status(Status.BadRequest) : Response.Json(stats);
+            List<Score> stats = DataHandler.GetUserScoreboard(username);
+            return stats is null ? Response.Status(Status.InternalServerError) : Response.Json(stats);
         }
 
         /// <summary>

@@ -30,12 +30,17 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
 
         private static Response PostBattles(RequestData requestData)
         {
-            throw new NotImplementedException();
-        }
-
-        private static Response PostTransaction(RequestData requestData)
-        {
-            throw new NotImplementedException();
+            string username = requestData.Authentication.Username;
+            string token = requestData.Authentication.Token;
+            if (username is null) return Response.Status(Status.BadRequest);
+            // Get all cards in deck, can be null, empty or not empty
+            List<Card> cards = DataHandler.GetUserDeck(username, true);
+            if (cards is null) return Response.Status(Status.InternalServerError);
+            if (cards.Count == 0) return Response.PlainText("Configure cards in deck first");
+            if (!token.UpdateGameStatus(true))
+                return Response.PlainText("User already in game");
+            return Response.PlainText("User already in game");
+            //return BattleLog log  = _game.GetResult(username, cards) is null ? Response.Status(Status.InternalServerError) : Response.Json(log);
         }
 
         /// <summary>
@@ -79,7 +84,7 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             {
                 User user = JsonSerializer.Deserialize<User>(payload);
                 if (user == null) return Response.Status(Status.BadRequest);
-                string token = user.Login();
+                string token = Authentication.Login(user);
                 return token != null
                     ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token)
                     : Response.PlainText("Invalid credentials", Status.Forbidden);
@@ -104,7 +109,7 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             {
                 User user = JsonSerializer.Deserialize<User>(payload);
                 if (user == null) return Response.Status(Status.BadRequest);
-                return user.Register() ? Response.PlainText("Register successful", Status.Created) : Response.PlainText("User already exists", Status.Conflict);
+                return Authentication.Register(user) ? Response.PlainText("Register successful", Status.Created) : Response.PlainText("User already exists", Status.Conflict);
             }
             catch (Exception e)
             {
