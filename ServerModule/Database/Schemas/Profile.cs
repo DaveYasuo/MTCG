@@ -1,6 +1,6 @@
 ﻿namespace ServerModule.Database.Schemas
 {
-    public class Profile
+    public class Profile : IProfileData, IStats
     {
         public string Username { get; }
         public string Name { get; }
@@ -11,8 +11,12 @@
         public int Losses { get; }
         public int Draws { get; }
         public long Coins { get; }
-        //public long GamesPlayed => Wins + Losses + Draws;
+        public long GamesPlayed => Wins + Losses + Draws;
 
+        /// <summary>
+        /// Use this ctor for generating new profile for database insertion
+        /// </summary>
+        /// <param name="username"></param>
         public Profile(string username)
         {
             Username = username;
@@ -27,7 +31,7 @@
         }
 
         /// <summary>
-        /// Use this ctor for getting data from profile table
+        /// Use this ctor for getting all data from profile table
         /// </summary>
         /// <param name="username"></param>
         /// <param name="name"></param>
@@ -50,18 +54,17 @@
             Draws = draws;
             Coins = coins;
         }
-        //public Profile(string username, int elo, int wins, int losses, int draws)
-        //{
-        //    Username = username;
-        //    Elo = elo;
-        //    Wins = wins;
-        //    Losses = losses;
-        //    Draws = draws;
-        //    Name = string.Empty;
-        //    Bio = string.Empty;
-        //    Image = string.Empty;
-        //}
 
-
+        public Profile(string username, int elo, int wins, int losses, int draws)
+        {
+            Username = username;
+            Elo = elo;
+            Wins = wins;
+            Losses = losses;
+            Draws = draws;
+            Name = string.Empty;
+            Bio = string.Empty;
+            Image = string.Empty;
+        }
     }
 }
