@@ -36,8 +36,7 @@ namespace ServerModule.Tcp
         ~TcpServer() => Stop();
 
         /// <summary>
-        /// Starts the server.
-        /// For every request a new Task is spawned to work off multiple request at once.
+        /// Starts the server. Every request generates a new Task.
         /// </summary>
         public void Start()
         {
@@ -55,8 +54,7 @@ namespace ServerModule.Tcp
                 Environment.Exit(0);
             };
             // Wait for request and work through them
-            // See: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=net-5.0#see-also
-            //int x = 0;
+            // See: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=net-5.0#examples
             while (_listening)
             {
                 try
