@@ -174,7 +174,7 @@ namespace ServerModule.SimpleLogic.Handler
         /// </summary>
         /// <param name="username"></param>
         /// <returns>Returns null if failed, else Credentials object</returns>
-        public static Credentials GetUser(string username)
+        public static Credentials GetCredentials(string username)
         {
             using NpgsqlConnection conn = Connection();
             try
@@ -261,6 +261,12 @@ namespace ServerModule.SimpleLogic.Handler
             }
         }
 
+        /// <summary>
+        /// Add username to the cards, if he/she can afford.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="packageCost"></param>
+        /// <returns>True, if package acquired, else false if not enough coins, no packages left or error </returns>
         public static bool AcquirePackage(string username, int packageCost)
         {
 
@@ -325,6 +331,11 @@ namespace ServerModule.SimpleLogic.Handler
             }
         }
 
+        /// <summary>
+        /// Retrieves all acquired cards from the specified user.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>A List of the cards or null if error occurred</returns>
         public static List<Card> GetUserCards(string username)
         {
             using NpgsqlConnection conn = Connection();
@@ -388,6 +399,12 @@ namespace ServerModule.SimpleLogic.Handler
             }
         }
 
+        /// <summary>
+        /// Set cards of user back to default (false in deck) and then updates the cards in the list to true in deck.
+        /// </summary>
+        /// <param name="deck"></param>
+        /// <param name="username"></param>
+        /// <returns>Returns true on success, else false.</returns>
         public static bool UpdateDeck(List<Guid> deck, string username)
         {
             using NpgsqlConnection conn = Connection();
@@ -434,6 +451,160 @@ namespace ServerModule.SimpleLogic.Handler
                 Printer.Instance.WriteLine(e.Message);
                 transaction.Rollback();
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Set new profile data to the user.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="userData"></param>
+        /// <returns>True on success, else false</returns>
+        public static bool UpdateProfile(string username, UserData userData)
+        {
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET name=@p1, bio=@p2, image=@p3 WHERE username=@p4", conn, transaction);
+                cmd.Parameters.AddWithValue("p1", userData.Name);
+                cmd.Parameters.AddWithValue("p2", userData.Bio);
+                cmd.Parameters.AddWithValue("p3", userData.Image);
+                cmd.Parameters.AddWithValue("p4", username);
+                cmd.Prepare();
+                if (cmd.ExecuteNonQuery() == 1)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+                transaction.Rollback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get ProfileData object from one user in the database. Contains of username, name, bio, image.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns the profile data object on success, else null</returns>
+        public static IProfileData GetProfileData(string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, name, bio, image FROM profile WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                IProfileData user = new ProfileData(
+                    reader.SafeGet<string>("username"),
+                    reader.SafeGet<string>("name"),
+                    reader.SafeGet<string>("bio"),
+                    reader.SafeGet<string>("image")
+                );
+                return reader.Read() ? null : user;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get Profile object from user in the database. Contains of username, elo, wins, losses, draws, coins.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns the profile object on success, else null</returns>
+        public static IStats GetUserStats(string username)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, elo, wins, losses, draws, coins FROM profile WHERE username=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                IStats user = new ProfileStats(
+                    reader.SafeGet<string>("username"),
+                    reader.SafeGet<int>("elo"),
+                    reader.SafeGet<int>("wins"),
+                    reader.SafeGet<int>("losses"),
+                    reader.SafeGet<int>("draws"),
+                    reader.SafeGet<long>("coins")
+                );
+                return reader.Read() ? null : user;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the top player as a List and also add the surrounding player of user at the end of the list, if user is not on the top
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>Returns a List of IStats, if error returns null</returns>
+        public static List<IStats> GetUserScoreboard(string username)
+        {
+            // if not in top 10 of Scoreboard, show player before and after user too
+            // See: https://www.the-art-of-web.com/sql/select-before-after/
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                List<IStats> scoreList = new List<IStats>();
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT row_number() OVER (ORDER BY elo), username, elo, wins, losses, draws FROM profile LIMIT 10;", conn);
+                cmd.Parameters.AddWithValue("p1", username);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                bool isInList = false;
+                while (reader.Read())
+                {
+                    IStats playerStats = new Stats(
+                        reader.SafeGet<string>("username"),
+                        reader.SafeGet<int>("elo"),
+                        reader.SafeGet<int>("wins"),
+                        reader.SafeGet<int>("losses"),
+                        reader.SafeGet<int>("draws")
+                    );
+                    scoreList.Add(playerStats);
+                    if (playerStats.Username == username) isInList = true;
+                }
+                if (isInList) return scoreList;
+                using NpgsqlCommand cmd1 = new NpgsqlCommand(@"
+                WITH cte AS (SELECT row_number() OVER (ORDER BY elo), username, elo, wins, losses, draws FROM profile),
+                     current AS (SELECT row_number FROM cte WHERE username =@p1)
+                SELECT cte.* FROM cte, current WHERE ABS(cte.row_number - current.row_number) <= 2 ORDER BY cte.row_number;", conn);
+                cmd1.Parameters.AddWithValue("p1", username);
+                cmd1.Prepare();
+                using NpgsqlDataReader reader1 = cmd1.ExecuteReader();
+                while (reader1.Read())
+                {
+                    IStats playerStats = new Stats(
+                        reader.SafeGet<string>("username"),
+                        reader.SafeGet<int>("elo"),
+                        reader.SafeGet<int>("wins"),
+                        reader.SafeGet<int>("losses"),
+                        reader.SafeGet<int>("draws")
+                    );
+                    scoreList.Add(playerStats);
+                }
+                return scoreList;
+            }
+            catch (Exception e)
+            {
+                Printer.Instance.WriteLine(e.Message);
+                return null;
             }
         }
     }

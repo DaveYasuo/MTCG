@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using ServerModule.Database.Models;
+using ServerModule.Database.Schemas;
 using ServerModule.SimpleLogic.Mapping;
 using ServerModule.SimpleLogic.Responses;
 using ServerModule.Utility;
@@ -12,6 +13,11 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
 {
     public partial class RequestHandler
     {
+        /// <summary>
+        /// Gets the current Deck of the user.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Returns the object (json or plaintext) if exists, else error response</returns>
         private static Response GetDeck(RequestData arg)
         {
             string username = arg.Authentication.Username;
@@ -36,16 +42,32 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             return Response.PlainText(cardString.ToString());
         }
 
+        /// <summary>
+        /// Gets the stats (win/loss/draw etc) from one user.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Returns the stats from the user as response, else error response</returns>
         private static Response GetStats(RequestData arg)
         {
-            throw new NotImplementedException();
+            string username = arg.Authentication.Username;
+            if (username is null) return Response.Status(Status.BadRequest);
+            IStats stats = DataHandler.GetUserStats(username);
+            return stats is null ? Response.Status(Status.BadRequest) : Response.Json(stats);
         }
 
         private static Response GetScore(RequestData arg)
         {
-            throw new NotImplementedException();
+            string username = arg.Authentication.Username;
+            if (username is null) return Response.Status(Status.BadRequest);
+            List<IStats> stats = DataHandler.GetUserScoreboard(username);
+            return stats is null ? Response.Status(Status.BadRequest) : Response.Json(stats);
         }
 
+        /// <summary>
+        /// Gets all acquired cards of the user.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Json Response or error response</returns>
         private static Response GetCards(RequestData arg)
         {
             string username = arg.Authentication.Username;
@@ -54,9 +76,19 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
             return cards is null ? Response.Status(Status.NoContent) : Response.Json(cards);
         }
 
+        /// <summary>
+        /// Get current User profile.
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Returns profile as json response.</returns>
         private static Response GetUser(RequestData arg)
         {
-            throw new NotImplementedException();
+            string authUsername = arg.Authentication.Username;
+            string pathUsername = arg.PathVariable;
+            if (authUsername is null || pathUsername is null) return Response.Status(Status.BadRequest);
+            if (pathUsername != authUsername) return Response.Status(Status.Forbidden);
+            IProfileData profile = DataHandler.GetProfileData(pathUsername);
+            return profile is null ? Response.Status(Status.BadRequest) : Response.Json(profile);
         }
 
         private static Response GetTradings(RequestData arg)

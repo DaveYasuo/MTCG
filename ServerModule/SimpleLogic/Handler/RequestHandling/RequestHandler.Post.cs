@@ -45,7 +45,7 @@ namespace ServerModule.SimpleLogic.Handler.RequestHandling
         /// <returns></returns>
         private static Response PostPackages(RequestData data)
         {
-            Credentials credentials = DataHandler.GetUser(data.Authentication.Username);
+            Credentials credentials = DataHandler.GetCredentials(data.Authentication.Username);
             if (credentials == null) return Response.Status(Status.BadRequest);
             // Check if User has Admin Role
             // triple check: once with username from AuthorizationToken (request), and once from database (role). Second can happen when manually alter db-table.
