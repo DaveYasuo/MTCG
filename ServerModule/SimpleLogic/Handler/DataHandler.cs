@@ -224,7 +224,7 @@ namespace ServerModule.SimpleLogic.Handler
                     reader.SafeGet<int>("losses"),
                     reader.SafeGet<int>("draws"),
                     reader.SafeGet<long>("coins")
-                );
+                        );
                 return reader.Read() ? null : user;
             }
             catch (Exception e)
@@ -555,14 +555,14 @@ namespace ServerModule.SimpleLogic.Handler
         /// </summary>
         /// <param name="username"></param>
         /// <returns>Returns a List of IStats, if error returns null</returns>
-        public static List<IStats> GetUserScoreboard(string username)
+        public static List<Score> GetUserScoreboard(string username)
         {
             // if not in top 10 of Scoreboard, show player before and after user too
             // See: https://www.the-art-of-web.com/sql/select-before-after/
             using NpgsqlConnection conn = Connection();
             try
             {
-                List<IStats> scoreList = new List<IStats>();
+                List<Score> scoreList = new List<Score>();
                 using NpgsqlCommand cmd = new NpgsqlCommand("SELECT row_number() OVER (ORDER BY elo), username, elo, wins, losses, draws FROM profile LIMIT 10;", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
@@ -570,7 +570,8 @@ namespace ServerModule.SimpleLogic.Handler
                 bool isInList = false;
                 while (reader.Read())
                 {
-                    IStats playerStats = new Stats(
+                    Score playerStats = new Score(
+                        reader.SafeGet<long>("row_number"),
                         reader.SafeGet<string>("username"),
                         reader.SafeGet<int>("elo"),
                         reader.SafeGet<int>("wins"),
@@ -590,7 +591,8 @@ namespace ServerModule.SimpleLogic.Handler
                 using NpgsqlDataReader reader1 = cmd1.ExecuteReader();
                 while (reader1.Read())
                 {
-                    IStats playerStats = new Stats(
+                    Score playerStats = new Score(
+                        reader.SafeGet<long>("row_number"),
                         reader.SafeGet<string>("username"),
                         reader.SafeGet<int>("elo"),
                         reader.SafeGet<int>("wins"),

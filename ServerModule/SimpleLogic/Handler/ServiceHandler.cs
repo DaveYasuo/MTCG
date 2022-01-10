@@ -1,4 +1,5 @@
-﻿using ServerModule.SimpleLogic.Mapping;
+﻿using System.Collections.Generic;
+using ServerModule.SimpleLogic.Mapping;
 using ServerModule.SimpleLogic.Requests;
 using ServerModule.SimpleLogic.Responses;
 using ServerModule.SimpleLogic.Security;
@@ -28,18 +29,27 @@ namespace ServerModule.SimpleLogic.Handler
 
             // if Request has unsupported syntax
             if (request == null) return Response.Status(Status.BadRequest);
-            // if path is unsupported
-            if (!_mapping.Contains(request.Method, request.Target)) return Response.Status(Status.NotFound);
             // if HTTP Version is unsupported
             if (request.Version != "HTTP/1.1") return Response.Status(Status.HttpVersionNotSupported);
-            // if Method is not supported
-            // The server must generate an Allow header field in a 405 status code response.
-            // The field must contain a list of methods that the target resource currently supports. todo
-            if (request.Method is Method.Patch or Method.Error) return Response.Status(Status.MethodNotAllowed);
-
+            // Check if method is supported
+            switch (request.Method)
+            {
+                // if Method is not allowed the server must generate an Allow header field in a 405 status code response.
+                // The field must contain a list of methods that the target resource currently supports.
+                // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
+                case Method.Patch or Method.Head:
+                    {
+                        Dictionary<string, string> allowedHeaders = new() { { "Allow", "GET, POST, PUT, DELETE" } };
+                        return Response.Status(Status.MethodNotAllowed, allowedHeaders);
+                    }
+                case Method.Error:
+                    return Response.Status(Status.NotImplemented);
+            }
+            // if path is unsupported
+            if (!_mapping.Contains(request.Method, request.Target)) return Response.Status(Status.NotFound);
             // Proceed handling Request:
             // Check if path is secured, if not just invoke the corresponding function
-            if (!Authentication.PathIsSecured(request.Method, request.Target)) return _mapping.InvokeMethod(request.Method, request.Target, null, request.Payload, request.PathVariable, request.RequestParam);
+            if (!request.Method.PathIsSecured(request.Target)) return _mapping.InvokeMethod(request.Method, request.Target, null, request.Payload, request.PathVariable, request.RequestParam);
             // Check if Authorization header was send
             if (!request.Headers.ContainsKey("Authorization")) return Response.Status(Status.Unauthorized);
             // If so, check credentials
@@ -48,9 +58,9 @@ namespace ServerModule.SimpleLogic.Handler
             string type = line[0];
             string token = line[1];
             // Check if Authentication is valid
-            if (!Authentication.Check(type, token)) return Response.Status(Status.Forbidden);
+            if (!type.Check(token)) return Response.Status(Status.Forbidden);
             // Get Token Details
-            AuthToken authToken = Authentication.GetTokenDetails(token);
+            AuthToken authToken = token.GetDetails();
             // invoke the corresponding function
             return _mapping.InvokeMethod(request.Method, request.Target, authToken, request.Payload, request.PathVariable, request.RequestParam);
         }
