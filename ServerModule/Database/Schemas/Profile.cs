@@ -42,6 +42,7 @@
         /// <param name="losses"></param>
         /// <param name="draws"></param>
         /// <param name="coins"></param>
+        /// <param name="rank"></param>
         public Profile(string username, string name, string bio, string image, int elo, int wins, int losses, int draws, long coins)
         {
             Username = username;
@@ -53,18 +54,6 @@
             Losses = losses;
             Draws = draws;
             Coins = coins;
-        }
-
-        public Profile(string username, int elo, int wins, int losses, int draws)
-        {
-            Username = username;
-            Elo = elo;
-            Wins = wins;
-            Losses = losses;
-            Draws = draws;
-            Name = string.Empty;
-            Bio = string.Empty;
-            Image = string.Empty;
         }
     }
 }

@@ -1,7 +1,8 @@
 ﻿namespace ServerModule.Database.Schemas
 {
-    public class Stats : IStats
+    public class Score : IStats
     {
+        public long Rank { get; }
         public string Username { get; }
         public int Elo { get; }
         public int Wins { get; }
@@ -11,13 +12,15 @@
         /// <summary>
         /// Use this ctor for getting stats for the scoreboard
         /// </summary>
+        /// <param name="rank"></param>
         /// <param name="username"></param>
         /// <param name="elo"></param>
         /// <param name="wins"></param>
         /// <param name="losses"></param>
         /// <param name="draws"></param>
-        public Stats(string username, int elo, int wins, int losses, int draws)
+        public Score( long rank, string username, int elo, int wins, int losses, int draws)
         {
+            Rank = rank;
             Username = username;
             Elo = elo;
             Wins = wins;
