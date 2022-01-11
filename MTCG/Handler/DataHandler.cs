@@ -23,7 +23,7 @@ namespace MTCG.Handler
         {
             Log.WriteLine("Starting DB");
             //Postgres postgres = new Postgres();
-            Postgres postgres = new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db", Log);
+            Postgres postgres = new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db", Log, true);
             ConnectionString = postgres.ConnString;
             Log.WriteLine("DB started");
         }
