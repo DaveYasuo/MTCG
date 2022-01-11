@@ -24,7 +24,7 @@ namespace MTCG.Database.PostgreSql
         /// <summary>
         /// Default Constructor reads Credentials from Docker Environment Variables
         /// </summary>
-        public Postgres(IPrinter log)
+        public Postgres(IPrinter log, bool autoDrop = false)
         {
             _host = "host.docker.internal";
             _port = Environment.GetEnvironmentVariable(PgEnv.Port);
@@ -33,9 +33,11 @@ namespace MTCG.Database.PostgreSql
             _database = Environment.GetEnvironmentVariable(PgEnv.Database);
             _log = log;
             Start();
+            if (autoDrop) DropTable();
+            CreateTablesIfNoExist();
         }
 
-        public Postgres(string host, string port, string username, string password, string database, IPrinter log)
+        public Postgres(string host, string port, string username, string password, string database, IPrinter log, bool autoDrop = false)
         {
             _host = host;
             _port = port;
@@ -44,6 +46,8 @@ namespace MTCG.Database.PostgreSql
             _database = database;
             _log = log;
             Start();
+            if (autoDrop) DropTable();
+            CreateTablesIfNoExist();
         }
 
         ~Postgres()
@@ -67,13 +71,26 @@ namespace MTCG.Database.PostgreSql
                 _connection.Open();
                 if (!ContainsDb()) CreateDb();
                 CreateConnection();
-                CreateTablesIfNoExist();
             }
             catch (Exception e)
             {
                 _log.WriteLine(e.Message);
                 throw;
             }
+        }
+
+        public void DropTable()
+        {
+            using var cmd = new NpgsqlCommand(@"
+            alter table if exists cards
+            drop constraint if exists fk_store;
+            drop table if exists store;
+            drop table if exists cards;
+            drop table if exists profile;
+            drop table if exists credentials;
+            drop table if exists packages;
+            ", _connection);
+            cmd.ExecuteNonQuery();
         }
 
         public void Stop()
