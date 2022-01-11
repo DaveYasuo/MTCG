@@ -22,7 +22,7 @@ namespace MTCG.Handler
         static DataHandler()
         {
             Log.WriteLine("Starting DB");
-            //Postgres postgres = new Postgres();
+            //Postgres postgres = new Postgres(Log, true);
             Postgres postgres = new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db", Log, true);
             ConnectionString = postgres.ConnString;
             Log.WriteLine("DB started");
@@ -137,9 +137,10 @@ namespace MTCG.Handler
                 transaction.Commit();
                 return true;
             }
-            catch (PostgresException)
+            catch (NpgsqlException e)
             {
-                // catching duplicate key value violates unique constraint and rollback
+                // catching duplicate key value violates unique constraint (error code 23505) and rollback
+                if (e.SqlState != "23505") Log.WriteLine(e.Message);
                 transaction.Rollback();
                 return false;
             }
@@ -285,18 +286,16 @@ namespace MTCG.Handler
         /// <returns>True, if package acquired, else false if not enough coins, no packages left or error </returns>
         public static bool AcquirePackage(string username, int packageCost)
         {
-
+            // Check again if user has enough coins
+            long coins = GetUserCoins(username);
+            if (coins is -1 || coins - packageCost < 0)
+            {
+                return false;
+            }
             using NpgsqlConnection conn = Connection();
             using NpgsqlTransaction transaction = conn.BeginTransaction();
             try
             {
-                // Check again if user has enough coins
-                long coins = GetUserCoins(username);
-                if (coins is -1 || coins - packageCost < 0)
-                {
-                    transaction.Rollback();
-                    return false;
-                }
                 const string coinsSql = "UPDATE profile SET coins=@p1 WHERE username=@p2";
                 using NpgsqlCommand profileCmd = new NpgsqlCommand(coinsSql, conn, transaction);
                 profileCmd.Parameters.AddWithValue("p1", coins - packageCost);

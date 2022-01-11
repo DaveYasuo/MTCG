@@ -35,6 +35,7 @@ namespace MTCG.Database.PostgreSql
             Start();
             if (autoDrop) DropTable();
             CreateTablesIfNoExist();
+            Stop();
         }
 
         public Postgres(string host, string port, string username, string password, string database, IPrinter log, bool autoDrop = false)
@@ -48,6 +49,7 @@ namespace MTCG.Database.PostgreSql
             Start();
             if (autoDrop) DropTable();
             CreateTablesIfNoExist();
+            Stop();
         }
 
         ~Postgres()
