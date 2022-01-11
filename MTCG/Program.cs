@@ -1,10 +1,11 @@
 ﻿using DebugAndTrace;
-using ServerModule.Database.PostgreSql;
-using ServerModule.Docker;
-using ServerModule.SimpleLogic.Mapping;
+using MTCG.BattleLogic;
+using MTCG.Handler.RequestHandling;
+using MTCG.Securities;
+using ServerModule.Mapping;
 using ServerModule.Tcp;
 using ServerModule.Tcp.Listener;
-using ServerModule.Utility;
+using ServerModule.Security;
 
 namespace MTCG
 {
@@ -17,29 +18,34 @@ namespace MTCG
     // test private code https://stackoverflow.com/questions/9122708/unit-testing-private-methods-in-c-sharp
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             // Initialize the output stream
-            Printer.CreateInstance(ConsolePrinter.Instance);
-            IPrinter printer = Printer.Instance;
+            IPrinter log = Logger.GetPrinter(Printer.Debug);
 
-            printer.WriteLine("Hello World!");
+            log.WriteLine("Hello World!");
 
-            // Initialize Postgres Connection, Database and Tables for faster performance 
-            printer.WriteLine("Starting DB");
-            using (new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db")) { }
-            // not required, if using default, but for convenience
-            //using (new Postgres()) { }
-            printer.WriteLine("DB started");
+            // start game service
+            GameServer gameServer = new GameServer();
+
+            // Initialize security data
+            Security security = new Security();
+
+            // Initialize Wrapper Class with security
+            Authentication authentication = new Authentication(security);
+
+            // Initialize RequestHandler
+            RequestHandler requestHandler = new RequestHandler(gameServer, authentication, log);
 
             // Initialize Mapping for Routing
-            Mapping mapping = new Mapping();
+            Map map = new Map(requestHandler);
+
             // Start Server
             TcpListener listener = new TcpListener(10001);
-            TcpServer server = new TcpServer(listener, mapping);
+            TcpServer server = new TcpServer(listener, map, authentication, log);
             server.Start();
 
-            printer.WriteLine("Hello Afterlife!");
+            log.WriteLine("Hello Afterlife!");
         }
     }
 }

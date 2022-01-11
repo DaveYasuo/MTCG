@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using DebugAndTrace;
-using ServerModule.SimpleLogic.Responses;
+using ServerModule.Responses;
 
 namespace ServerModule.Utility
 {
@@ -33,6 +33,7 @@ namespace ServerModule.Utility
 
     public static class Utils
     {
+        private static readonly IPrinter Log = Logger.GetPrinter(Printer.Debug);
         private static readonly Dictionary<Char, char> Characters = new()
         {
             { Char.WhiteSpace, ' ' },
@@ -117,7 +118,7 @@ namespace ServerModule.Utility
             }
             catch (Exception e)
             {
-                Printer.Instance.WriteLine(e.Message);
+                Log.WriteLine(e.Message);
                 throw;
             }
         }

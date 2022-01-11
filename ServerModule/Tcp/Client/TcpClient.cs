@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ServerModule.SimpleLogic.Mapping;
-using ServerModule.SimpleLogic.Requests;
-using ServerModule.SimpleLogic.Responses;
+using ServerModule.Mapping;
+using ServerModule.Requests;
+using ServerModule.Responses;
 using ServerModule.Utility;
 using Char = ServerModule.Utility.Char;
 
@@ -22,7 +22,7 @@ namespace ServerModule.Tcp.Client
             _client = client;
         }
 
-        public Request ReadRequest(IMapping mapping)
+        public Request ReadRequest(in IMap map)
         {
             // Read request
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
@@ -80,7 +80,7 @@ namespace ServerModule.Tcp.Client
                  * target can have multiple "/", so check if those paths exists 
                  * only supported up to two "/"
                  */
-                if (!mapping.Contains(method, target))
+                if (!map.Contains(method, target))
                 {
                     pathVariable = target[(target.LastIndexOf(Utils.GetChar(Char.Slash)) + 1)..];
                     /*
@@ -150,7 +150,7 @@ namespace ServerModule.Tcp.Client
             return request;
         }
 
-        public void SendResponse(Response response)
+        public void SendResponse(in Response response)
         {
             // Send request
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages

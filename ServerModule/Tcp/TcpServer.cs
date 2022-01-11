@@ -1,36 +1,51 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DebugAndTrace;
-using ServerModule.SimpleLogic.Handler;
-using ServerModule.SimpleLogic.Mapping;
-using ServerModule.SimpleLogic.Requests;
-using ServerModule.SimpleLogic.Responses;
+using ServerModule.Mapping;
+using ServerModule.Requests;
+using ServerModule.Responses;
+using ServerModule.Security;
 using ServerModule.Tcp.Client;
 using ServerModule.Tcp.Listener;
+using ServerModule.Utility;
 
 namespace ServerModule.Tcp
 {
     public class TcpServer : IServer
     {
         private bool _listening;
-        private readonly IPrinter _printer = Printer.Instance;
+        private readonly IPrinter _log;
         private readonly ITcpListener _server;
-        private readonly IMapping _mapping;
+        private readonly IMap _map;
+        private readonly Authentication _auth;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private CancellationTokenSource _tokenSource;
 
-        public TcpServer(ITcpListener server, IMapping mapping)
+        public TcpServer(ITcpListener server, IMap map, Authentication auth, IPrinter logger)
         {
             _server = server;
-            _mapping = mapping;
+            _map = map;
+            _auth = auth;
+            _log = logger;
         }
 
-        public TcpServer(IMapping mapping)
+        public TcpServer(int port, IMap map, Authentication auth, IPrinter logger)
         {
-            _mapping = mapping;
-            _server = new TcpListener(10001);
+            _server = new TcpListener(port);
+            _map = map;
+            _auth = auth;
+            _log = logger;
+        }
+
+        public TcpServer(ITcpListener server, IRequestHandler requestHandler, Authentication auth, IPrinter logger)
+        {
+            _server = server;
+            _auth = auth;
+            _map = new Map(requestHandler);
+            _log = logger;
         }
 
         ~TcpServer() => Stop();
@@ -46,11 +61,11 @@ namespace ServerModule.Tcp
             // See: https://docs.microsoft.com/en-us/dotnet/standard/parallel-programming/how-to-cancel-a-task-and-its-children
             _tokenSource = new CancellationTokenSource();
             _server.Start();
-            _printer.WriteLine("Ready to accept clients");
+            _log.WriteLine("Ready to accept clients");
             Console.CancelKeyPress += (_, e) =>
             {
                 Stop();
-                _printer.WriteLine($"Server closed by: {e.SpecialKey}.");
+                _log.WriteLine($"Server closed by: {e.SpecialKey}.");
                 Environment.Exit(0);
             };
             // Wait for request and work through them
@@ -84,7 +99,7 @@ namespace ServerModule.Tcp
                 catch (Exception e)
                 {
                     // Prevent SocketException when break
-                    Printer.Instance.WriteLine(e.Message);
+                    _log.WriteLine(e.Message);
                 }
             }
         }
@@ -101,11 +116,9 @@ namespace ServerModule.Tcp
             // await Task.Delay(5000); 
             //_printer.WriteLine($"Task {Task.CurrentId} Awaken");
 
-            // Here send the message to the ServiceHandler and back to client
-            ServiceHandler service = new ServiceHandler(_mapping);
-            Request request = client.ReadRequest(_mapping);
-            Response response = service.HandleRequest(request);
-            client.SendResponse(response);
+            Request request = client.ReadRequest(in _map);
+            Response response = HandleRequest(in request);
+            client.SendResponse(in response);
         }
 
         /// <summary>
@@ -126,18 +139,60 @@ namespace ServerModule.Tcp
                 try
                 {
                     //_printer.WriteLine($"Wait for Task {task.Id}");
-                    _printer.WriteLine(task.Wait(500) ? "Task is completed" : "Task failed.");
+                    _log.WriteLine(task.Wait(500) ? "Task completed" : "Task failed.");
                 }
                 catch (Exception e)
                 {
                     // Prevent TaskCanceledException
-                    Printer.Instance.WriteLine(e.Message);
+                    _log.WriteLine(e.Message);
                 }
             }
 
             _tokenSource.Dispose();
             _tasks.Clear();
             _server.Stop();
+        }
+
+        public Response HandleRequest(in Request request)
+        {
+            // See: https://developer.mozilla.org/de/docs/Web/HTTP/Status
+
+            // if Request has unsupported syntax
+            if (request == null) return Response.Status(Status.BadRequest);
+            // if HTTP Version is unsupported
+            if (request.Version != "HTTP/1.1") return Response.Status(Status.HttpVersionNotSupported);
+            // Check if method is supported
+            switch (request.Method)
+            {
+                // if Method is not allowed the server must generate an Allow header field in a 405 status code response.
+                // The field must contain a list of methods that the target resource currently supports.
+                // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Allow
+                case Method.Patch or Method.Head:
+                    {
+                        Dictionary<string, string> allowedHeaders = new() { { "Allow", "GET, POST, PUT, DELETE" } };
+                        return Response.Status(Status.MethodNotAllowed, allowedHeaders);
+                    }
+                case Method.Error:
+                    return Response.Status(Status.NotImplemented);
+            }
+            // if path is unsupported
+            if (!_map.Contains(request.Method, request.Target)) return Response.Status(Status.NotFound);
+            // Proceed handling Request:
+            // Check if path is secured, if not just invoke the corresponding function
+            if (_auth == null || !_auth.PathIsSecured(request.Method, request.Target)) return _map.InvokeMethod(request.Method, request.Target, null, request.Payload, request.PathVariable, request.RequestParam);
+            // Check if Authorization header was send
+            if (!request.Headers.ContainsKey("Authorization")) return Response.Status(Status.Unauthorized);
+            // If so, check credentials
+            string[] line = request.Headers["Authorization"].Split(Utils.GetChar(Utility.Char.WhiteSpace));
+            if (line.Length != 2) return Response.Status(Status.Forbidden);
+            string type = line[0];
+            string token = line[1];
+            // Check if Authentication is valid
+            if (!_auth.Check(type, token)) return Response.Status(Status.Forbidden);
+            // Get Token Details
+            AuthToken authToken = _auth.GetDetails(token);
+            // invoke the corresponding function
+            return _map.InvokeMethod(request.Method, request.Target, authToken, request.Payload, request.PathVariable, request.RequestParam);
         }
     }
 }
