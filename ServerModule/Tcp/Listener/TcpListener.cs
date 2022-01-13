@@ -1,64 +1,33 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using DebugAndTrace;
 using ServerModule.Tcp.Client;
 using TcpClient = ServerModule.Tcp.Client.TcpClient;
 
 namespace ServerModule.Tcp.Listener
 {
+    /// <summary>
+    /// Wrapper Class for the TcpListener
+    /// </summary>
+    /// <inheritdoc cref="ITcpListener"/>
     public class TcpListener : ITcpListener
     {
         private readonly System.Net.Sockets.TcpListener _server;
 
-        public TcpListener()
+        public TcpListener(int port)
         {
-            Console.WriteLine("TcpListener1");
-            // default port
-            int port = 10001;
             _server = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port);
         }
 
-        public TcpListener(int port)
-        {
-            Console.WriteLine("TcpListener");
-            try
-            {
-                _server = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port);
-            }
-            catch (ArgumentNullException e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
-        }
         public void Start()
         {
-            try
-            {
-                _server.Start();
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e.Message);
-                throw;
-            }
+            _server.Start();
         }
 
         public void Stop()
         {
-            try
-            {
-                _server.Stop();
-            }
-            catch (SocketException e)
-            {
-                Console.WriteLine(e.Message);
-            }
+            _server.Stop();
         }
 
         public ITcpClient AcceptTcpClient()
