@@ -14,7 +14,6 @@ namespace ServerModule.Security
         public Authentication(ISecurity security)
         {
             _security = security;
-            Console.WriteLine("Authentication");
         }
 
         /// <summary>

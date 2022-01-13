@@ -7,10 +7,6 @@ namespace MTCG.BattleLogic
 {
     public class GameServer : IServer
     {
-        public GameServer()
-        {
-            Console.WriteLine("Game");
-        }
         public void Start()
         {
             throw new NotImplementedException();

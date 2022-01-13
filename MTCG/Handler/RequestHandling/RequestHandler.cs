@@ -26,7 +26,6 @@ namespace MTCG.Handler.RequestHandling
             _game = game;
             _auth = auth;
             _log = printer;
-            Console.WriteLine("RequestHandler");
         }
 
         // Function in a dictionary
