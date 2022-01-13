@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DebugAndTrace;
+using ServerModule.Container;
 using ServerModule.Mapping;
 using ServerModule.Requests;
 using ServerModule.Responses;
@@ -24,30 +25,15 @@ namespace ServerModule.Tcp
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private CancellationTokenSource _tokenSource;
 
-        public TcpServer(ITcpListener server, IMap map, Authentication auth, IPrinter logger)
+        public TcpServer(int port, IContainer container)
         {
-            Console.WriteLine("TcpServer");
-            _server = server;
-            _map = map;
-            _auth = auth;
-            _log = logger;
+            container.RegisterSingleton<Authentication>();
+            container.Register<IMap, Map>();
+            _server = new TcpListener(port);
+            _map = container.GetInstance<IMap>();
+            _auth = container.GetInstance<Authentication>();
+            _log = container.GetInstance<IPrinter>();
         }
-
-        //public TcpServer(int port, IMap map, Authentication auth, IPrinter logger)
-        //{
-        //    _server = new TcpListener(port);
-        //    _map = map;
-        //    _auth = auth;
-        //    _log = logger;
-        //}
-
-        //public TcpServer(ITcpListener server, IRequestHandler requestHandler, Authentication auth, IPrinter logger)
-        //{
-        //    _server = server;
-        //    _auth = auth;
-        //    _map = new Map(requestHandler);
-        //    _log = logger;
-        //}
 
         ~TcpServer() => Stop();
 
@@ -154,6 +140,11 @@ namespace ServerModule.Tcp
             _server.Stop();
         }
 
+        /// <summary>
+        /// Handling the request and invoke the specific method.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>Returns a fully useable Response object</returns>
         public Response HandleRequest(in Request request)
         {
             // See: https://developer.mozilla.org/de/docs/Web/HTTP/Status
