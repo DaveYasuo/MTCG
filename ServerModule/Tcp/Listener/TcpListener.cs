@@ -12,6 +12,7 @@ namespace ServerModule.Tcp.Listener
 
         public TcpListener()
         {
+            Console.WriteLine("TcpListener1");
             // default port
             int port = 10001;
             _server = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port);
@@ -19,6 +20,7 @@ namespace ServerModule.Tcp.Listener
 
         public TcpListener(int port)
         {
+            Console.WriteLine("TcpListener");
             try
             {
                 _server = new System.Net.Sockets.TcpListener(IPAddress.Loopback, port);

@@ -26,27 +26,28 @@ namespace ServerModule.Tcp
 
         public TcpServer(ITcpListener server, IMap map, Authentication auth, IPrinter logger)
         {
+            Console.WriteLine("TcpServer");
             _server = server;
             _map = map;
             _auth = auth;
             _log = logger;
         }
 
-        public TcpServer(int port, IMap map, Authentication auth, IPrinter logger)
-        {
-            _server = new TcpListener(port);
-            _map = map;
-            _auth = auth;
-            _log = logger;
-        }
+        //public TcpServer(int port, IMap map, Authentication auth, IPrinter logger)
+        //{
+        //    _server = new TcpListener(port);
+        //    _map = map;
+        //    _auth = auth;
+        //    _log = logger;
+        //}
 
-        public TcpServer(ITcpListener server, IRequestHandler requestHandler, Authentication auth, IPrinter logger)
-        {
-            _server = server;
-            _auth = auth;
-            _map = new Map(requestHandler);
-            _log = logger;
-        }
+        //public TcpServer(ITcpListener server, IRequestHandler requestHandler, Authentication auth, IPrinter logger)
+        //{
+        //    _server = server;
+        //    _auth = auth;
+        //    _map = new Map(requestHandler);
+        //    _log = logger;
+        //}
 
         ~TcpServer() => Stop();
 

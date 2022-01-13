@@ -1,4 +1,5 @@
-﻿using ServerModule.Models;
+﻿using System;
+using ServerModule.Models;
 using ServerModule.Utility;
 
 namespace ServerModule.Security
@@ -13,6 +14,7 @@ namespace ServerModule.Security
         public Authentication(ISecurity security)
         {
             _security = security;
+            Console.WriteLine("Authentication");
         }
 
         /// <summary>

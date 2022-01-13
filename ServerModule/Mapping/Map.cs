@@ -16,7 +16,7 @@ namespace ServerModule.Mapping
         public Map(IRequestHandler requestHandler)
         {
             _mappingPath = new Dictionary<Method, Dictionary<string, Func<RequestData, Response>>>();
-
+            Console.WriteLine("Map");
             // Convert Enum to List
             // See: https://stackoverflow.com/a/1167367
             List<Method> methods = new List<Method>(Enum.GetValues<Method>());

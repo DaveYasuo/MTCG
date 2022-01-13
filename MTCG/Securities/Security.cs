@@ -30,6 +30,11 @@ namespace MTCG.Securities
             { Method.Delete, new List<string>() { "/tradings" } },
         };
 
+        public Security()
+        {
+            Console.WriteLine("Security");
+        }
+
         /// <summary>
         /// Gets the Dictionary with the methods and secured paths.
         /// </summary>
