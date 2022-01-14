@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using MTCG.Models;
 using ServerModule;
-using ServerModule.Models;
 
 namespace MTCG.BattleLogic
 {

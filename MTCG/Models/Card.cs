@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ServerModule.Models
+namespace MTCG.Models
 {
     public class Card
     {

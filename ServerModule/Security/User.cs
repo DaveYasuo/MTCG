@@ -1,4 +1,4 @@
-﻿namespace ServerModule.Models
+﻿namespace ServerModule.Security
 {
     /// <summary>
     /// This class is used to make JSON data (register and login) to User class

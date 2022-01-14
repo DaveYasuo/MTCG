@@ -1,6 +1,4 @@
-﻿using System;
-using ServerModule.Models;
-using ServerModule.Utility;
+﻿using ServerModule.Utility;
 
 namespace ServerModule.Security
 {

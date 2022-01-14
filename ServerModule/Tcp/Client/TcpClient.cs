@@ -16,13 +16,14 @@ namespace ServerModule.Tcp.Client
     public class TcpClient : ITcpClient
     {
         private readonly System.Net.Sockets.TcpClient _client;
+        private static readonly IMap Map = DependencyService.GetInstance<IMap>();
 
         public TcpClient(System.Net.Sockets.TcpClient client)
         {
             _client = client;
         }
 
-        public Request ReadRequest(in IMap map)
+        public Request ReadRequest()
         {
             // Read request
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Messages
@@ -80,7 +81,7 @@ namespace ServerModule.Tcp.Client
                  * target can have multiple "/", so check if those paths exists 
                  * only supported up to two "/"
                  */
-                if (!map.Contains(method, target))
+                if (!Map.Contains(method, target))
                 {
                     pathVariable = target[(target.LastIndexOf(Utils.GetChar(Char.Slash)) + 1)..];
                     /*

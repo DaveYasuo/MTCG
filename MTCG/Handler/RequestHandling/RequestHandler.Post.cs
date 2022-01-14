@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using MTCG.Database.Schemas;
+using MTCG.Models;
 using ServerModule.Mapping;
-using ServerModule.Models;
 using ServerModule.Responses;
 using ServerModule.Security;
 

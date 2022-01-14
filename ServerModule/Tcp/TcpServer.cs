@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DebugAndTrace;
-using ServerModule.Container;
 using ServerModule.Mapping;
 using ServerModule.Requests;
 using ServerModule.Responses;
@@ -24,15 +23,16 @@ namespace ServerModule.Tcp
         private readonly Authentication _auth;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private CancellationTokenSource _tokenSource;
+        private Thread _serverThread;
 
-        public TcpServer(int port, IContainer container)
+        public TcpServer(int port)
         {
-            container.RegisterSingleton<Authentication>();
-            container.Register<IMap, Map>();
+            DependencyService.RegisterSingleton<Authentication>();
+            DependencyService.Register<IMap, Map>();
             _server = new TcpListener(port);
-            _map = container.GetInstance<IMap>();
-            _auth = container.GetInstance<Authentication>();
-            _log = container.GetInstance<IPrinter>();
+            _map = DependencyService.GetInstance<IMap>();
+            _auth = DependencyService.GetInstance<Authentication>();
+            _log = DependencyService.GetInstance<IPrinter>();
         }
 
         ~TcpServer() => Stop();
@@ -55,6 +55,12 @@ namespace ServerModule.Tcp
                 _log.WriteLine($"Server closed by: {e.SpecialKey}.");
                 Environment.Exit(0);
             };
+            _serverThread = new Thread(ServerHandler);
+            _serverThread.Start();
+        }
+
+        private void ServerHandler()
+        {
             // Wait for request and work through them
             // See: https://docs.microsoft.com/en-us/dotnet/api/system.net.sockets.tcplistener?view=net-5.0#examples
             while (_listening)
@@ -69,7 +75,7 @@ namespace ServerModule.Tcp
                     string id = Guid.NewGuid().ToString();
                     ITcpClient client = _server.AcceptTcpClient();
                     //_printer.WriteLine($"Task {id} Waiting for complete");
-                    Task task = Task.Run(() => Process(client), token);
+                    Task task = Task.Run(() => ClientProcess(client), token);
                     _tasks[id] = task;
                     //_printer.WriteLine($"Task {id} added to the collection");
                     // Remove task from collection when finished
@@ -95,7 +101,7 @@ namespace ServerModule.Tcp
         /// Processes a new client request and returns a response to them.
         /// </summary>
         /// <param name="client"></param>
-        private void Process(ITcpClient client)
+        private void ClientProcess(ITcpClient client)
         {
             //_printer.WriteLine($"Task {Task.CurrentId} Processing");
             if (client == null) return;
@@ -103,7 +109,7 @@ namespace ServerModule.Tcp
             // await Task.Delay(5000); 
             //_printer.WriteLine($"Task {Task.CurrentId} Awaken");
 
-            Request request = client.ReadRequest(in _map);
+            Request request = client.ReadRequest();
             Response response = HandleRequest(in request);
             client.SendResponse(in response);
         }
@@ -134,7 +140,7 @@ namespace ServerModule.Tcp
                     _log.WriteLine(e.Message);
                 }
             }
-
+            _serverThread.Join();
             _tokenSource.Dispose();
             _tasks.Clear();
             _server.Stop();

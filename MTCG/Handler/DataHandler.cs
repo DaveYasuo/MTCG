@@ -5,7 +5,7 @@ using DebugAndTrace;
 using MTCG.Database.PostgreSql;
 using MTCG.Database.Schemas;
 using Npgsql;
-using ServerModule.Models;
+using MTCG.Models;
 
 namespace MTCG.Handler
 {

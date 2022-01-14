@@ -6,7 +6,7 @@ namespace ServerModule.Tcp.Client
 {
     public interface ITcpClient
     {
-        Request ReadRequest(in IMap map);
+        Request ReadRequest();
         void SendResponse(in Response response);
         public void Close();
     }

@@ -1,4 +1,4 @@
-﻿namespace ServerModule.Models
+﻿namespace MTCG.Models
 {
     public class UserData
     {

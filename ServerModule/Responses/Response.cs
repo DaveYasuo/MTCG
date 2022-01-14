@@ -51,7 +51,7 @@ namespace ServerModule.Responses
         {
             return new Response(status, headers);
         }
-        
+
         /// <summary>
         /// Returns a new response instance that converts payload object to JSON string and default status code 200 which can be overwritten.
         /// </summary>

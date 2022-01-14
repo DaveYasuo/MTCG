@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using MTCG.Models;
 using ServerModule.Mapping;
-using ServerModule.Models;
 using ServerModule.Responses;
 
 namespace MTCG.Handler.RequestHandling

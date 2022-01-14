@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using ServerModule.Models;
 using ServerModule.Utility;
 
 namespace ServerModule.Security
