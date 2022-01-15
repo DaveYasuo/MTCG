@@ -4,9 +4,9 @@ namespace MTCG.Models
 {
     public class Card
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public double Damage { get; set; }
+        public Guid Id { get; }
+        public string Name { get; }
+        public double Damage { get; }
 
         public Card(Guid id, string name, double damage)
         {

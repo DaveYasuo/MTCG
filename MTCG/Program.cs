@@ -26,11 +26,10 @@ namespace MTCG
             DependencyService.Register<ISecurity, Security>();
             // the server also needs a custom RequestHandler that implements IRequestHandler
             DependencyService.Register<IRequestHandler, RequestHandler>();
-            
+
             // Start Server
             TcpServer server = new TcpServer(10001);
             server.Start();
-
         }
     }
 }
