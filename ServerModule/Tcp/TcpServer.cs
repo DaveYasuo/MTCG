@@ -51,8 +51,8 @@ namespace ServerModule.Tcp
             _log.WriteLine("Ready to accept clients");
             Console.CancelKeyPress += (_, e) =>
             {
+                _log.WriteLine($"Main Server closed by: {e.SpecialKey}.");
                 Stop();
-                _log.WriteLine($"Server closed by: {e.SpecialKey}.");
                 Environment.Exit(0);
             };
             _serverThread = new Thread(ServerHandler);
@@ -140,10 +140,23 @@ namespace ServerModule.Tcp
                     _log.WriteLine(e.Message);
                 }
             }
-            _serverThread.Join();
             _tokenSource.Dispose();
             _tasks.Clear();
+            SendDummyData();
+            _serverThread.Join();
             _server.Stop();
+        }
+
+        /// <summary>
+        /// To close server properly, we need to unblock AcceptTcpClient or it would throw an socket exception
+        /// </summary>
+        private void SendDummyData()
+        {
+            System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient("localhost", 10001);
+            System.Net.Sockets.NetworkStream stream = client.GetStream();
+            byte[] emptyArray = Array.Empty<byte>();
+            // Send the message to the connected TcpServer.
+            stream.Write(emptyArray, 0, emptyArray.Length);
         }
 
         /// <summary>
@@ -186,7 +199,7 @@ namespace ServerModule.Tcp
             string type = line[0];
             string token = line[1];
             // Check if Authentication is valid
-            if (!_auth.Check(type, token)) return Response.Status(Status.Forbidden);
+            if (_auth.Check(type, token, UserStatus.Blocked)) return Response.Status(Status.Forbidden);
             // Get Token Details
             AuthToken authToken = _auth.GetDetails(token);
             // invoke the corresponding function
