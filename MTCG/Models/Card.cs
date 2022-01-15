@@ -6,9 +6,9 @@ namespace MTCG.Models
     {
         public Guid Id { get; }
         public string Name { get; }
-        public double Damage { get; }
+        public float Damage { get; }
 
-        public Card(Guid id, string name, double damage)
+        public Card(Guid id, string name, float damage)
         {
             Id = id;
             Name = name;
