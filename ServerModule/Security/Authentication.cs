@@ -30,10 +30,11 @@ namespace ServerModule.Security
         /// </summary>
         /// <param name="type"></param>
         /// <param name="token"></param>
-        /// <returns></returns>
-        public bool Check(string type, string token)
+        /// <param name="statusCode"></param>
+        /// <returns>True if already logged in with the specific statusCode, else false</returns>
+        public bool Check(string type, string token, UserStatus statusCode)
         {
-            return _security.Authenticate(type, token);
+            return _security.Authenticate(type, token, statusCode);
         }
 
         /// <summary>
@@ -61,9 +62,9 @@ namespace ServerModule.Security
             return _security.GetTokenDetails(token);
         }
 
-        public bool UpdateGameStatus(string token, bool setStatus)
+        public bool UpdateStatus(string token, UserStatus newStatus, UserStatus oldStatus)
         {
-            return _security.UpdateGameStatus(token, setStatus);
+            return _security.UpdateStatus(token, newStatus, oldStatus);
         }
     }
 }

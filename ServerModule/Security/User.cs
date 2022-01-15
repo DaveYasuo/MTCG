@@ -5,15 +5,21 @@
     /// </summary>
     public class User
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Username { get; }
+        public string Password { get; }
+        public UserStatus StatusCode { get; set; }
 
-        //public User(){}
-
-        public User(string username, string password)
+        /// <summary>
+        /// Used for ISecurity authentication
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="statusCode"></param>
+        public User(string username, string password, UserStatus statusCode)
         {
             Username = username;
             Password = password;
+            StatusCode = statusCode;
         }
     }
 }

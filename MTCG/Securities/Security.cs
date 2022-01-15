@@ -13,15 +13,12 @@ namespace MTCG.Securities
 {
     public class Security : ISecurity
     {
-        // Using Hashset is more efficient with constant time // updated, not really thread safe
-        // See: https://stackoverflow.com/a/17278638
-        //private readonly HashSet<string> _basicTokens = new();
-        // using ConcurrentDictionary instead
+        // Using Hashset is more efficient with constant time // updated, not really thread safe using ConcurrentDictionary instead
         // See: https://docs.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2?view=net-6.0
         /// <summary>
-        /// string contains user token, bool states that user is in game or not
+        /// string contains user token and UserStatus contains custom status which will only be stored in memory
         /// </summary>
-        private readonly ConcurrentDictionary<string, bool> _basicTokens = new();
+        private readonly ConcurrentDictionary<string, UserStatus> _users = new();
         private readonly Dictionary<Method, List<string>> _protectedPaths = new()
         {
             { Method.Get, new List<string>() { "/cards", "/deck", "/users", "/stats", "/score", "/tradings" } },
@@ -40,16 +37,17 @@ namespace MTCG.Securities
         }
 
         /// <summary>
-        /// Checks if User is logged in and is also (still) in the database
+        /// Checks if User is logged in, has that specific status code and is also (still) in the database
         /// </summary>
         /// <param name="type"></param>
         /// <param name="token"></param>
+        /// <param name="statusCode"></param>
         /// <returns>True if is logged in, else false</returns>
-        public bool Authenticate(string type, string token)
+        public bool Authenticate(string type, string token, UserStatus statusCode)
         {
             // Authorization Header
             // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
-            return type == "Basic" && token.EndsWith("-mtcgToken") && _basicTokens.ContainsKey(token) && DataHandler.ContainsToken(token);
+            return type == "Basic" && token.EndsWith("-mtcgToken") && _users.ContainsKey(token) && _users[token] == statusCode && DataHandler.ContainsToken(token);
         }
 
         /// <summary>
@@ -79,7 +77,7 @@ namespace MTCG.Securities
         {
             if (!CheckCredentials(user.Username, user.Password)) return null;
             string token = GenerateToken(user.Username);
-            return AddToken(token, user.Username) ? token : null;
+            return AddToken(token, user.Username, user.StatusCode) ? token : null;
         }
 
         /// <summary>
@@ -95,15 +93,16 @@ namespace MTCG.Securities
         }
 
         /// <summary>
-        /// Add the token to the dictionary and to the database.
+        /// Add the token with the given status to the dictionary and to the database.
         /// </summary>
         /// <param name="token"></param>
         /// <param name="username"></param>
-        /// <returns></returns>
-        private bool AddToken(string token, string username)
+        /// <param name="statusCode"></param>
+        /// <returns>True if added, else false</returns>
+        private bool AddToken(string token, string username, UserStatus statusCode)
         {
             if (!DataHandler.AddTokenToUser(token, username)) return false;
-            _basicTokens[token] = false;
+            _users[token] = statusCode;
             return true;
         }
 
@@ -155,14 +154,15 @@ namespace MTCG.Securities
         }
 
         /// <summary>
-        /// If trying to queue user to game set boolean to true, else false. Once user is in game, he cannot be in another game until the game has finished.
+        /// Set new Custom status of a user, if the oldStatus is equal to the (old) value of the existing key.
         /// </summary>
         /// <param name="token"></param>
         /// <param name="setStatus"></param>
+        /// <param name="oldStatus"></param>
         /// <returns>Bool indicates if update was success (true) or failed (false)</returns>
-        public bool UpdateGameStatus(string token, bool setStatus)
+        public bool UpdateStatus(string token, UserStatus setStatus, UserStatus oldStatus)
         {
-            return _basicTokens.TryUpdate(token, setStatus, !setStatus);
+            return _users.TryUpdate(token, setStatus, oldStatus);
         }
     }
 }

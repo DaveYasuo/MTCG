@@ -36,9 +36,9 @@ namespace MTCG.Handler.RequestHandling
             List<Card> cards = DataHandler.GetUserDeck(username, true);
             if (cards is null) return Response.Status(Status.InternalServerError);
             if (cards.Count == 0) return Response.PlainText("Configure cards in deck first");
-            if (!_auth.UpdateGameStatus(token, true)) return Response.PlainText("User already in game");
-            string result =  _game.Play(username, cards);
-            _auth.UpdateGameStatus(token, false);
+            if (!_auth.UpdateStatus(token, UserStatus.Occupied, UserStatus.Available)) return Response.PlainText("User already in game");
+            string result = _game.Play(username, cards);
+            _auth.UpdateStatus(token, UserStatus.Available, UserStatus.Occupied);
             return result == null ? Response.Status(Status.InternalServerError) : Response.Json(result);
         }
 
@@ -81,8 +81,10 @@ namespace MTCG.Handler.RequestHandling
             //User user = payload.GetObject<User>();
             try
             {
+                // since payload has all arguments that User-class has, we can just use the User object from Server for deserialization
                 User user = JsonSerializer.Deserialize<User>(payload);
                 if (user == null) return Response.Status(Status.BadRequest);
+                user.StatusCode = UserStatus.Available;
                 string token = _auth.Login(user);
                 return token != null
                     ? Response.PlainText("Welcome " + user.Username + Environment.NewLine + "Token: " + token)
@@ -106,6 +108,7 @@ namespace MTCG.Handler.RequestHandling
             if (payload == null) return Response.Status(Status.BadRequest);
             try
             {
+                // since payload has all arguments that User-class has, we can just use the User object from Server for deserialization
                 User user = JsonSerializer.Deserialize<User>(payload);
                 if (user == null) return Response.Status(Status.BadRequest);
                 return _auth.Register(user) ? Response.PlainText("Register successful", Status.Created) : Response.PlainText("User already exists", Status.Conflict);
