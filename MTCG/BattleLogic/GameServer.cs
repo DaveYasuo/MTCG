@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using DebugAndTrace;
 using MTCG.Data.Users;
 using MTCG.Models;
 using ServerModule;
@@ -11,16 +12,20 @@ namespace MTCG.BattleLogic
 {
     public class GameServer : IServer
     {
+        private readonly IPrinter _log;
         private bool _running;
         private CancellationTokenSource _tokenSource;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private readonly ConcurrentQueue<IPlayer> _queue = new();
         private Thread _serverThread;
 
-        public GameServer()
+        public GameServer(IPrinter log)
         {
+            _log = log;
             Start();
         }
+
+        ~GameServer() => Stop();
 
         public void Start()
         {
@@ -29,6 +34,7 @@ namespace MTCG.BattleLogic
             _tokenSource = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) =>
             {
+                _log.WriteLine($"Game Server closed by: {e.SpecialKey}.");
                 Stop();
             };
             _serverThread = new Thread(ServiceHandler);
@@ -92,9 +98,9 @@ namespace MTCG.BattleLogic
                     // Prevent TaskCanceledException
                 }
             }
-            _serverThread.Join();
             _tokenSource.Dispose();
             _tasks.Clear();
+            _serverThread.Join();
         }
 
         private void QueuePlayer(IPlayer player)
