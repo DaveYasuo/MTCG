@@ -47,25 +47,27 @@ namespace MTCG.BattleLogic
             {
                 try
                 {
-                    if (_queue.Count >= 2)
+                    if (_queue.Count < 2)
                     {
-                        // Get players from queue
-                        IPlayer player1 = null, player2 = null;
-                        // if tryDequeue returns false, out playerA/B's value is default -> null
-                        while (player1 == null) _queue.TryDequeue(out player1);
-                        while (player2 == null) _queue.TryDequeue(out player2);
-
-                        CancellationToken token = _tokenSource.Token;
-                        string id = Guid.NewGuid().ToString();
-                        var task = Task.Run(() => Game(player1, player2), token);
-                        _tasks[id] = task;
-                        // Remove task from collection when finished
-                        task.ContinueWith(t =>
-                        {
-                            _tasks.TryRemove(id, out t!);
-                        }, token);
+                        Thread.Sleep(100);
+                        continue;
                     }
-                    else Thread.Sleep(15);
+                    // Get players from queue
+                    IPlayer player1 = null, player2 = null;
+                    // if tryDequeue returns false, out playerA/B's value is default -> null
+                    while (player1 == null) _queue.TryDequeue(out player1);
+                    while (player2 == null) _queue.TryDequeue(out player2);
+
+                    CancellationToken token = _tokenSource.Token;
+                    string id = Guid.NewGuid().ToString();
+                    Task task = Task.Run(() => Game(player1, player2), token);
+                    _tasks[id] = task;
+                    // Remove task from collection when finished
+                    task.ContinueWith(delegate (Task t)
+                    {
+                        if (t == null) return;
+                        _tasks.TryRemove(id, out t);
+                    }, token);
                 }
                 catch (Exception)
                 {
