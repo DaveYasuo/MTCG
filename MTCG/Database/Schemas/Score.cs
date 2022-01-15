@@ -4,7 +4,7 @@
     {
         public long Rank { get; }
         public string Username { get; }
-        public int Elo { get; }
+        public short Elo { get; }
         public int Wins { get; }
         public int Losses { get; }
         public int Draws { get; }
@@ -18,7 +18,7 @@
         /// <param name="wins"></param>
         /// <param name="losses"></param>
         /// <param name="draws"></param>
-        public Score( long rank, string username, int elo, int wins, int losses, int draws)
+        public Score( long rank, string username, short elo, int wins, int losses, int draws)
         {
             Rank = rank;
             Username = username;

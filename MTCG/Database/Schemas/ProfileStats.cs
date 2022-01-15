@@ -3,7 +3,7 @@
     public class ProfileStats : IStats
     {
         public string Username { get; }
-        public int Elo { get; }
+        public short Elo { get; }
         public int Wins { get; }
         public int Losses { get; }
         public int Draws { get; }
@@ -19,7 +19,7 @@
         /// <param name="losses"></param>
         /// <param name="draws"></param>
         /// <param name="coins"></param>
-        public ProfileStats(string username, int elo, int wins, int losses, int draws, long coins)
+        public ProfileStats(string username, short elo, int wins, int losses, int draws, long coins)
         {
             Username = username;
             Elo = elo;

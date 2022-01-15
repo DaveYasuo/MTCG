@@ -6,7 +6,7 @@
         public string Name { get; }
         public string Bio { get; }
         public string Image { get; }
-        public int Elo { get; }
+        public short Elo { get; }
         public int Wins { get; }
         public int Losses { get; }
         public int Draws { get; }
@@ -42,7 +42,7 @@
         /// <param name="losses"></param>
         /// <param name="draws"></param>
         /// <param name="coins"></param>
-        public Profile(string username, string name, string bio, string image, int elo, int wins, int losses, int draws, long coins)
+        public Profile(string username, string name, string bio, string image, short elo, int wins, int losses, int draws, long coins)
         {
             Username = username;
             Name = name;
