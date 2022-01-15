@@ -37,7 +37,8 @@ namespace MTCG.Handler.RequestHandling
             if (cards is null) return Response.Status(Status.InternalServerError);
             if (cards.Count == 0) return Response.PlainText("Configure cards in deck first");
             if (!_auth.UpdateGameStatus(token, true)) return Response.PlainText("User already in game");
-            string result = _game.Play(username, cards);
+            string result =  _game.Play(username, cards);
+            _auth.UpdateGameStatus(token, false);
             return result == null ? Response.Status(Status.InternalServerError) : Response.Json(result);
         }
 
