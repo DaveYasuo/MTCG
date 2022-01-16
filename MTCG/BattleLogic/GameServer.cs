@@ -45,6 +45,7 @@ namespace MTCG.BattleLogic
         {
             while (_running)
             {
+                Console.WriteLine("Game");
                 try
                 {
                     if (_queue.Count < 2)
@@ -108,6 +109,7 @@ namespace MTCG.BattleLogic
         private void QueuePlayer(IPlayer player)
         {
             _queue.Enqueue(player);
+            player.InGame = true;
         }
 
         public string Play(string username, List<Card> cards)
@@ -117,8 +119,15 @@ namespace MTCG.BattleLogic
             return GetResult(player);
         }
 
-        private string GetResult(IPlayer username)
+        private string GetResult(IPlayer player)
         {
+            while (player.InGame)
+            {
+                // Trying to understand if task.delay or thread.sleep should be used
+                // See: https://stackoverflow.com/questions/34052381/thread-sleep2500-vs-task-delay2500-wait
+                // Seems thread.sleep(1) is similar to task.delay(1).wait() in my case
+                Thread.Sleep(10000);
+            }
             return "";
         }
     }

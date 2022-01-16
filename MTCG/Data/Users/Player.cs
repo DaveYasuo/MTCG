@@ -7,15 +7,15 @@ namespace MTCG.Data.Users
     {
         public string Username { get; }
         public List<Card> Cards { get; }
+        public List<string> Log { get; }
+        public bool InGame { get; set; }
 
-        public Player(string username)
+        public Player(string username, List<Card> cards, List<string> log = null, bool inGame = false)
         {
             Username = username;
-        }
-
-        public Player(string username, List<Card> cards) : this(username)
-        {
             Cards = cards;
+            Log = log;
+            InGame = inGame;
         }
     }
 }
