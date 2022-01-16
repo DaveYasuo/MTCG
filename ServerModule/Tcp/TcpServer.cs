@@ -89,10 +89,10 @@ namespace ServerModule.Tcp
                         client.Close();
                     }, token);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // Prevent SocketException when break
-                    _log.WriteLine(e.Message);
+                    // Ein Blockierungsvorgang wurde durch einen Aufruf von WSACancelBlockingCall unterbrochen.
                 }
             }
         }
@@ -142,21 +142,8 @@ namespace ServerModule.Tcp
             }
             _tokenSource.Dispose();
             _tasks.Clear();
-            SendDummyData();
-            _serverThread.Join();
             _server.Stop();
-        }
-
-        /// <summary>
-        /// To close server properly, we need to unblock AcceptTcpClient or it would throw an socket exception
-        /// </summary>
-        private void SendDummyData()
-        {
-            System.Net.Sockets.TcpClient client = new System.Net.Sockets.TcpClient("localhost", 10001);
-            System.Net.Sockets.NetworkStream stream = client.GetStream();
-            byte[] emptyArray = Array.Empty<byte>();
-            // Send the message to the connected TcpServer.
-            stream.Write(emptyArray, 0, emptyArray.Length);
+            _serverThread.Join();
         }
 
         /// <summary>
