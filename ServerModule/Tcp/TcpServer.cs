@@ -17,7 +17,7 @@ namespace ServerModule.Tcp
     public class TcpServer : IServer
     {
         private bool _listening;
-        private readonly IPrinter _log;
+        private readonly ILogger _log;
         private readonly ITcpListener _server;
         private readonly IMap _map;
         private readonly Authentication _auth;
@@ -32,7 +32,7 @@ namespace ServerModule.Tcp
             _server = new TcpListener(port);
             _map = DependencyService.GetInstance<IMap>();
             _auth = DependencyService.GetInstance<Authentication>();
-            _log = DependencyService.GetInstance<IPrinter>();
+            _log = DependencyService.GetInstance<ILogger>();
         }
 
         ~TcpServer() => Stop();

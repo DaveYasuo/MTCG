@@ -4,7 +4,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using DebugAndTrace;
+using MTCG.Data.Cards;
 using MTCG.Data.Users;
+using MTCG.Handler;
+using MTCG.Logging;
 using MTCG.Models;
 using ServerModule;
 
@@ -12,14 +15,14 @@ namespace MTCG.BattleLogic
 {
     public class GameServer : IServer
     {
-        private readonly IPrinter _log;
+        private readonly ILogger _log;
         private bool _running;
         private CancellationTokenSource _tokenSource;
         private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private readonly ConcurrentQueue<IPlayer> _queue = new();
         private Thread _serverThread;
 
-        public GameServer(IPrinter log)
+        public GameServer(ILogger log)
         {
             _log = log;
             Start();
@@ -45,7 +48,7 @@ namespace MTCG.BattleLogic
         {
             while (_running)
             {
-                Console.WriteLine("Game");
+                //Console.WriteLine("Game");
                 try
                 {
                     if (_queue.Count < 2)
@@ -64,11 +67,11 @@ namespace MTCG.BattleLogic
                     Task task = Task.Run(() => Game(player1, player2), token);
                     _tasks[id] = task;
                     // Remove task from collection when finished
-                    task.ContinueWith(delegate (Task t)
-                    {
-                        if (t == null) return;
-                        _tasks.TryRemove(id, out t);
-                    }, token);
+                    task.ContinueWith(t =>
+                   {
+                       if (t == null) return;
+                       _tasks.TryRemove(id, out t);
+                   }, token);
                 }
                 catch (Exception)
                 {
@@ -79,7 +82,14 @@ namespace MTCG.BattleLogic
 
         private void Game(IPlayer player1, IPlayer player2)
         {
-
+            Battle battle = new Battle(player1, player2, new BattleLog(player1, player2));
+            battle.StartGame();
+            BattleResult result = battle.GetResult();
+            if (DataHandler.UpdateGameResult(result, player1.Username, player2.Username))
+            {
+                player1.InGame = false;
+                player2.InGame = false;
+            };
         }
 
         public void Stop()
@@ -112,23 +122,24 @@ namespace MTCG.BattleLogic
             player.InGame = true;
         }
 
-        public string Play(string username, List<Card> cards)
+        public List<string> Play(string username, List<Card> rawCards)
         {
+            List<ICard> cards = rawCards.ConvertAll(CardFactory.BuildCard);
             IPlayer player = new Player(username, cards);
             QueuePlayer(player);
             return GetResult(player);
         }
 
-        private string GetResult(IPlayer player)
+        private List<string> GetResult(IPlayer player)
         {
             while (player.InGame)
             {
                 // Trying to understand if task.delay or thread.sleep should be used
                 // See: https://stackoverflow.com/questions/34052381/thread-sleep2500-vs-task-delay2500-wait
                 // Seems thread.sleep(1) is similar to task.delay(1).wait() in my case
-                Thread.Sleep(10000);
+                Thread.Sleep(1000);
             }
-            return "";
+            return player.Log;
         }
     }
 }

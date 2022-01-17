@@ -19,13 +19,13 @@ namespace MTCG.Handler.RequestHandling
         // Battle Logic
         private readonly GameServer _game;
         private readonly Authentication _auth;
-        private readonly IPrinter _log;
+        private readonly ILogger _log;
 
-        public RequestHandler(GameServer game, Authentication auth, IPrinter printer)
+        public RequestHandler(GameServer game, Authentication auth, ILogger logger)
         {
             _game = game;
             _auth = auth;
-            _log = printer;
+            _log = logger;
         }
 
         // Function in a dictionary

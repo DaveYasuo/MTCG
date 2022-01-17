@@ -33,7 +33,7 @@ namespace ServerModule.Utility
 
     public static class Utils
     {
-        private static readonly IPrinter Log = Logger.GetPrinter(Printer.Debug);
+        private static readonly ILogger Log = Logger.GetPrinter(Printer.Debug);
         private static readonly Dictionary<Char, char> Characters = new()
         {
             { Char.WhiteSpace, ' ' },

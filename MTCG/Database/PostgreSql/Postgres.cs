@@ -18,13 +18,13 @@ namespace MTCG.Database.PostgreSql
         private readonly string _username;
         private readonly string _password;
         private readonly string _database;
-        private readonly IPrinter _log;
+        private readonly ILogger _log;
 
 
         /// <summary>
         /// Default Constructor reads Credentials from Docker Environment Variables
         /// </summary>
-        public Postgres(IPrinter log, bool autoDrop = false)
+        public Postgres(ILogger log, bool autoDrop = false)
         {
             _host = "host.docker.internal";
             _port = Environment.GetEnvironmentVariable(PgEnv.Port);
@@ -37,7 +37,7 @@ namespace MTCG.Database.PostgreSql
             CreateTablesIfNoExist();
         }
 
-        public Postgres(string host, string port, string username, string password, string database, IPrinter log, bool autoDrop = false)
+        public Postgres(string host, string port, string username, string password, string database, ILogger log, bool autoDrop = false)
         {
             _host = host;
             _port = port;

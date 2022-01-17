@@ -17,7 +17,7 @@ namespace MTCG.Docker
         public static readonly string Password = "POSTGRES_PASSWORD";
         public static readonly string Database = "POSTGRES_DB";
         public static readonly string Port = "POSTGRES_PORT";
-        private static readonly IPrinter Log = Logger.GetPrinter(Printer.Debug);
+        private static readonly ILogger Log = Logger.GetPrinter(Printer.Debug);
 
         static PgEnv()
         {

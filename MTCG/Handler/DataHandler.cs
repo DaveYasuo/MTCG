@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using DebugAndTrace;
+using MTCG.BattleLogic;
 using MTCG.Database.PostgreSql;
 using MTCG.Database.Schemas;
 using Npgsql;
@@ -17,7 +18,7 @@ namespace MTCG.Handler
         // See: https://stackoverflow.com/a/55434778
 
         private static readonly string ConnectionString;
-        private static readonly IPrinter Log = Logger.GetPrinter(Printer.Debug);
+        private static readonly ILogger Log = Logger.GetPrinter(Printer.Debug);
 
         static DataHandler()
         {
@@ -614,7 +615,7 @@ namespace MTCG.Handler
             try
             {
                 List<Score> scoreList = new List<Score>();
-                using (NpgsqlCommand cmd = new NpgsqlCommand("SELECT row_number() OVER (ORDER BY elo), username, elo, wins, losses, draws FROM profile LIMIT 10;", conn))
+                using (NpgsqlCommand cmd = new NpgsqlCommand("SELECT row_number() OVER (ORDER BY elo DESC), username, elo, wins, losses, draws FROM profile LIMIT 10;", conn))
                 {
                     cmd.Parameters.AddWithValue("p1", username);
                     cmd.Prepare();
@@ -637,7 +638,7 @@ namespace MTCG.Handler
                 }
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand(@"
-                WITH cte AS (SELECT row_number() OVER (ORDER BY elo), username, elo, wins, losses, draws FROM profile),
+                WITH cte AS (SELECT row_number() OVER (ORDER BY elo DESC), username, elo, wins, losses, draws FROM profile),
                      current AS (SELECT row_number FROM cte WHERE username =@p1)
                 SELECT cte.* FROM cte, current WHERE ABS(cte.row_number - current.row_number) <= 2 ORDER BY cte.row_number;", conn))
                 {
@@ -663,6 +664,93 @@ namespace MTCG.Handler
             {
                 Log.WriteLine(e.Message);
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Updates UserStats with the results of the game.
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="player1"></param>
+        /// <param name="player2"></param>
+        /// <param name="winCoins"></param>
+        /// <param name="lossCoins"></param>
+        /// <param name="drawCoins"></param>
+        /// <param name="addWinElo"></param>
+        /// <param name="addLossElo"></param>
+        /// <returns>True if update was successful, else false.</returns>
+        public static bool UpdateGameResult(BattleResult result, string player1, string player2, int winCoins = 3, int lossCoins = 1, int drawCoins = 2, int addWinElo = 3, int addLossElo = -5)
+        {
+
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            if (result.Draw)
+            {
+                try
+                {
+                    // increment value
+                    // See: https://stackoverflow.com/a/10233360
+                    using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET draws=draws+1, coins=coins+@p1 WHERE username=@p2 AND username=@p3 ", conn, transaction);
+                    cmd.Parameters.AddWithValue("p1", drawCoins);
+                    cmd.Parameters.AddWithValue("p2", player1);
+                    cmd.Parameters.AddWithValue("p3", player2);
+                    cmd.Prepare();
+                    if (cmd.ExecuteNonQuery() == 2)
+                    {
+                        transaction.Commit();
+                        return true;
+                    }
+                    transaction.Rollback();
+                    return false;
+                }
+                catch (Exception e)
+                {
+                    Log.WriteLine(e.Message);
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+            string loser = result.Winner == player1 ? player2 : player1;
+            try
+            {
+                using NpgsqlBatch cmd = new NpgsqlBatch(conn, transaction)
+                {
+                    BatchCommands =
+                    {
+                        new NpgsqlBatchCommand("UPDATE profile SET elo=elo+@p1, wins=wins+1, coins=coins+@p2 WHERE username=@p3")
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", addWinElo),
+                                new NpgsqlParameter("p2", winCoins),
+                                new NpgsqlParameter("p3", result.Winner)
+                            }
+                        },
+                        new NpgsqlBatchCommand("UPDATE profile SET elo=elo+@p1, losses=losses+1, coins=coins+@p2 WHERE username=@p3")
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", addLossElo),
+                                new NpgsqlParameter("p2", lossCoins),
+                                new NpgsqlParameter("p3", loser)
+                            }
+                        }
+                    }
+                };
+                cmd.Prepare();
+                if (cmd.ExecuteNonQuery() == 2)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+                transaction.Rollback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
             }
         }
     }

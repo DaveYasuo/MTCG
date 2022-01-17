@@ -1,21 +1,52 @@
-﻿using MTCG.Models;
+﻿using System;
+using MTCG.Models;
 using System.Collections.Generic;
+using MTCG.Data.Cards;
 
 namespace MTCG.Data.Users
 {
+    /// <inheritdoc cref="IPlayer"/>
     public class Player : IPlayer
     {
         public string Username { get; }
-        public List<Card> Cards { get; }
+        public List<ICard> Cards { get; }
         public List<string> Log { get; }
         public bool InGame { get; set; }
+        public string LastPlayedCard { get; set; }
 
-        public Player(string username, List<Card> cards, List<string> log = null, bool inGame = false)
+        private readonly Random _rnd;
+
+        public ICard GetRandomCard()
+        {
+            ICard card = GenerateRandomCard();
+            LastPlayedCard = card.Name;
+            return card;
+        }
+
+        public void Add(ICard card)
+        {
+            Cards.Add(card);
+        }
+
+        public void Remove(ICard card)
+        {
+            Cards.Remove(card);
+        }
+
+        public Player(string username, List<ICard> cards, bool inGame = false)
         {
             Username = username;
             Cards = cards;
-            Log = log;
+            Log = new List<string>();
             InGame = inGame;
+            _rnd = new Random();
+        }
+
+        private ICard GenerateRandomCard()
+        {
+            // Random number with max value of the cards in the list
+            // See: https://docs.microsoft.com/en-us/dotnet/api/system.random.next?view=net-6.0
+            return Cards[_rnd.Next(Cards.Count)];
         }
     }
 }
