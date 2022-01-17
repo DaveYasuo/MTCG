@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace DebugAndTrace
 {
-    public interface IPrinter
+    public interface ILogger
     {
         void WriteLine(object text);
     }
@@ -14,22 +14,22 @@ namespace DebugAndTrace
     // Wrapper Class for Printers
     public class Logger
     {
-        public static IPrinter GetPrinter(Printer printer)
+        public static ILogger GetPrinter(Printer printer)
         {
             return printer switch
             {
-                Printer.Console => ConsolePrinter.Instance,
-                Printer.Debug => DebugPrinter.Instance,
-                Printer.Trace => TracePrinter.Instance,
+                Printer.Console => ConsoleLogger.Instance,
+                Printer.Debug => DebugLogger.Instance,
+                Printer.Trace => TraceLogger.Instance,
                 _ => throw new ArgumentOutOfRangeException(nameof(printer), printer, null)
             };
         }
     }
-    public class DebugPrinter : IPrinter
+    public class DebugLogger : ILogger
     {
-        public static readonly DebugPrinter Instance = new();
+        public static readonly DebugLogger Instance = new();
 
-        private DebugPrinter()
+        private DebugLogger()
         {
             Debug.WriteLine("Using Debug Printer");
         }
@@ -40,11 +40,11 @@ namespace DebugAndTrace
             Debug.Unindent();
         }
     }
-    public class ConsolePrinter : IPrinter
+    public class ConsoleLogger : ILogger
     {
-        public static readonly ConsolePrinter Instance = new();
+        public static readonly ConsoleLogger Instance = new();
 
-        private ConsolePrinter()
+        private ConsoleLogger()
         {
             Debug.WriteLine("Using Console Printer");
         }
@@ -53,11 +53,11 @@ namespace DebugAndTrace
             Console.WriteLine(text);
         }
     }
-    public class TracePrinter : IPrinter
+    public class TraceLogger : ILogger
     {
-        public static readonly TracePrinter Instance = new();
+        public static readonly TraceLogger Instance = new();
 
-        private TracePrinter()
+        private TraceLogger()
         {
             Debug.WriteLine("Using Trace Printer");
         }
