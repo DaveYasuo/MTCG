@@ -40,18 +40,16 @@ namespace MTCG.Logging
                     break;
             }
             Add($"Remaining cards: {_player1.Cards.Count} VS {_player2.Cards.Count}");
-            if (_player1.Cards.Count == 0 || _player2.Cards.Count == 0 || round == 100) AddResult();
+            if (_player1.Cards.Count == 0 || _player2.Cards.Count == 0) AddResult();
+            if (round != 100) return;
+            _winner = null;
+            AddResult();
         }
 
         private void AddResult()
         {
             Add("Game Over");
-            if (_winner == null)
-            {
-                Add("Draw Game");
-                return;
-            }
-            Add($"Player {_winner} wins the game");
+            Add(_winner == null ? "Draw Game" : $"Player {_winner} wins the game");
             _player1.Log.AddRange(LogList);
             _player2.Log.AddRange(LogList);
         }

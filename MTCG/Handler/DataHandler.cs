@@ -690,7 +690,7 @@ namespace MTCG.Handler
                 {
                     // increment value
                     // See: https://stackoverflow.com/a/10233360
-                    using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET draws=draws+1, coins=coins+@p1 WHERE username=@p2 AND username=@p3 ", conn, transaction);
+                    using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET draws=draws+1, coins=coins+@p1 WHERE username=@p2 OR username=@p3 ", conn, transaction);
                     cmd.Parameters.AddWithValue("p1", drawCoins);
                     cmd.Parameters.AddWithValue("p2", player1);
                     cmd.Parameters.AddWithValue("p3", player2);
