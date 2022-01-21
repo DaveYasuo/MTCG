@@ -1,17 +1,17 @@
 ﻿using MTCG.Data.Cards.Types;
 using System.Collections.Generic;
 using MTCG.Data.Cards.Specialties;
+using MTCG.Logging;
 
 namespace MTCG.Data.Cards
 {
     public interface ICard
     {
-        string Name { get; }
-        float Damage { get; }
-        Element Element { get; }
-
+        public string Name { get; }
+        public float Damage { get; }
+        public Element Element { get; }
         // Using IEnumerable
         // See: https://stackoverflow.com/a/30646094
-        IEnumerable<ISpecialty> Specialties { get; }
+        public IEnumerable<ISpecialty> Specialties { get; }
     }
 }

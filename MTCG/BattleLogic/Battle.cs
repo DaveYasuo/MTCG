@@ -25,7 +25,7 @@ namespace MTCG.BattleLogic
             {
                 ICard card1 = _player1.GetRandomCard();
                 ICard card2 = _player2.GetRandomCard();
-                (float damage1, float damage2) = Utility.CalculateDamage(card1, card2);
+                (float damage1, float damage2) = Utility.CalculateDamage(card1, card2, in _battleLog);
                 switch (damage1.CompareTo(damage2))
                 {
                     case > 0:

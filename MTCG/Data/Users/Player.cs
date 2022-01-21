@@ -9,7 +9,7 @@ namespace MTCG.Data.Users
     {
         public string Username { get; }
         public List<ICard> Cards { get; }
-        public List<object> Log { get; }
+        public List<object> Log { get; set; }
         public bool InGame { get; set; }
         /// <summary>
         /// Gets the name of the last played card

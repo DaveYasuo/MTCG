@@ -10,5 +10,9 @@ namespace MTCG.Logging
         public void AddRound(float damage1, float damage2, int round);
         public BattleResult GetResult();
         void AddStartInfo();
+        void AddBaseDamage(float myDamage, float otherDamage);
+        void AddElementReaction(string myElement, string otherElement);
+        void AddEffectInfo(string infoMessage);
+        void AddEffectiveDamage(float myDamage, float otherDamage);
     }
 }

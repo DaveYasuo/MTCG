@@ -10,6 +10,7 @@ namespace MTCG.Logging
         private readonly IPlayer _player2;
         public List<object> LogList { get; }
         private string _winner;
+        private CardLog _log;
 
         public BattleLog(IPlayer player1, IPlayer player2)
         {
@@ -18,6 +19,66 @@ namespace MTCG.Logging
             LogList = new List<object>();
         }
 
+        /// <summary>
+        /// Wrapper for adding to the Log
+        /// </summary>
+        /// <param name="message"></param>
+        private void Add(object message) => LogList.Add(message);
+
+        /// <summary>
+        /// Adds an intro to the LogList.
+        /// </summary>
+        public void AddStartInfo() => Add($"Player {_player1.Username} VS Player {_player2.Username}");
+
+        /// <summary>
+        /// Creates a new CardLog and log base damages to it.
+        /// </summary>
+        /// <param name="myDamage"></param>
+        /// <param name="otherDamage"></param>
+        public void AddBaseDamage(float myDamage, float otherDamage)
+        {
+            _log = new CardLog
+            {
+                Base = myDamage + " VS " + otherDamage
+            };
+        }
+
+        /// <summary>
+        /// Adds elemental advantages to the existing CardLog.
+        /// </summary>
+        /// <param name="myElement"></param>
+        /// <param name="otherElement"></param>
+        public void AddElementReaction(string myElement, string otherElement)
+        {
+            _log.Description.Add(myElement + " is effective against " + otherElement);
+        }
+
+        /// <summary>
+        /// Add the specific specialty information as a string to the CardLog in the description section.
+        /// </summary>
+        /// <param name="infoMessage"></param>
+        public void AddEffectInfo(string infoMessage)
+        {
+            _log.Description.Add(infoMessage);
+        }
+
+        /// <summary>
+        /// Adds the resulting damages to the CardLog.
+        /// </summary>
+        /// <param name="myDamage"></param>
+        /// <param name="otherDamage"></param>
+        public void AddEffectiveDamage(float myDamage, float otherDamage)
+        {
+            _log.Effective = myDamage + " VS " + otherDamage;
+
+        }
+
+        /// <summary>
+        /// Creates a new RoundLog object and adds it to the LogList.
+        /// </summary>
+        /// <param name="damage1"></param>
+        /// <param name="damage2"></param>
+        /// <param name="round"></param>
         public void AddRound(float damage1, float damage2, int round)
         {
             _winner = damage1.CompareTo(damage2) switch
@@ -29,7 +90,8 @@ namespace MTCG.Logging
             RoundLog roundLog = new RoundLog
             {
                 Round = round,
-                Title = $"{_player1.LastPlayedCard}: {damage1} VS {_player2.LastPlayedCard}: {damage2}",
+                Title = $"{_player1.LastPlayedCard} VS {_player2.LastPlayedCard}",
+                Body = _log,
                 RemainingCards = $" {_player1.Cards.Count} VS {_player2.Cards.Count}",
                 Result = _winner is { } ? $"{_winner} wins the round" : "Draw"
             };
@@ -40,6 +102,9 @@ namespace MTCG.Logging
             AddResult();
         }
 
+        /// <summary>
+        /// Adds the battle result to the LogList and then to the player's log.
+        /// </summary>
         private void AddResult()
         {
             Add(_winner == null ? "Draw Game" : $"Player {_winner} wins the game");
@@ -48,13 +113,10 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Wrapper for adding to the Log
+        /// Gets the current BattleLog and the results.
         /// </summary>
-        /// <param name="message"></param>
-        private void Add(object message) => LogList.Add(message);
-
+        /// <returns>A BattleResult object containing the battle results.</returns>
         public BattleResult GetResult() => _winner == null ? new BattleResult(LogList) : new BattleResult(_winner, _winner == _player1.Username ? _player2.Username : _player1.Username, LogList);
 
-        public void AddStartInfo() => Add($"Player {_player1.Username} VS Player {_player2.Username}");
     }
 }
