@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using MTCG.Database.Schemas;
 using MTCG.Handler;
-using MTCG.Models;
 using ServerModule.Security;
 using ServerModule.Utility;
 

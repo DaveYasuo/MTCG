@@ -1,5 +1,4 @@
-﻿using ServerModule.Mapping;
-using ServerModule.Requests;
+﻿using ServerModule.Requests;
 using ServerModule.Responses;
 
 namespace ServerModule.Tcp.Client

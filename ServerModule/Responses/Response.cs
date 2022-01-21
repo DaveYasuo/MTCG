@@ -53,6 +53,17 @@ namespace ServerModule.Responses
         }
 
         /// <summary>
+        /// Returns a new response instance with no content, but can have additional headers.
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="headers"></param>
+        /// <returns>Returns the given response with no content.</returns>
+        public static Response Status(int status, Dictionary<string, string> headers = null)
+        {
+            return new Response(status, headers);
+        }
+
+        /// <summary>
         /// Returns a new response instance that converts payload object to JSON string and default status code 200 which can be overwritten.
         /// </summary>
         /// <param name="payload"></param>
