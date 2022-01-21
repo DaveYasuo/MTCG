@@ -2,11 +2,14 @@
 using MTCG.Data.Cards;
 using MTCG.Data.Cards.Specialties;
 using MTCG.Data.Cards.Types;
+using MTCG.Models;
 
 namespace MTCG.Data.Utils
 {
     public static class Utility
     {
+        private static readonly Random Rnd = new();
+
         /// <summary>
         /// Calculates damage for both cards.
         /// </summary>
@@ -28,8 +31,6 @@ namespace MTCG.Data.Utils
         private static void ApplySpellEffect(this ICard card, ICard other, ref float myDamage, ref float otherDamage)
         {
             if (card.Element == other.Element) return;
-            if (card.Element == Element.None || other.Element == Element.None) return;
-
             switch (card.Element)
             {
                 case Element.Water when other.Element == Element.Fire:
@@ -64,6 +65,16 @@ namespace MTCG.Data.Utils
         {
             multiply *= factor;
             divide /= factor;
+        }
+
+        public static Element GenerateElement(this Card card)
+        {
+            // Get Random Enum
+            // See: https://stackoverflow.com/a/3132151
+            Array values = Enum.GetValues(typeof(Element));
+            // Null suppression
+            // See: https://stackoverflow.com/a/54724546
+            return (Element)values.GetValue(Rnd.Next(values.Length))!;
         }
     }
 }
