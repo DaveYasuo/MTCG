@@ -1,5 +1,4 @@
 ﻿using System;
-using MTCG.Models;
 using System.Collections.Generic;
 using MTCG.Data.Cards;
 
@@ -10,8 +9,11 @@ namespace MTCG.Data.Users
     {
         public string Username { get; }
         public List<ICard> Cards { get; }
-        public List<string> Log { get; }
+        public List<object> Log { get; }
         public bool InGame { get; set; }
+        /// <summary>
+        /// Gets the name of the last played card
+        /// </summary>
         public string LastPlayedCard { get; set; }
 
         private readonly Random _rnd;
@@ -37,7 +39,7 @@ namespace MTCG.Data.Users
         {
             Username = username;
             Cards = cards;
-            Log = new List<string>();
+            Log = new List<object>();
             InGame = inGame;
             _rnd = new Random();
         }

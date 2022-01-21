@@ -7,7 +7,7 @@ namespace MTCG.Data.Users
     {
         public string Username { get; }
         public List<ICard> Cards { get; }
-        public List<string> Log { get; }
+        public List<object> Log { get; }
         public  bool InGame { get; set; }
         public string LastPlayedCard { get; set; }
 
