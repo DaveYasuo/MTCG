@@ -1,6 +1,4 @@
-﻿using MTCG.Data.Utils;
-
-namespace MTCG.Data.Cards.Specialties
+﻿namespace MTCG.Data.Cards.Specialties
 {
     public interface ISpecialty
     {
