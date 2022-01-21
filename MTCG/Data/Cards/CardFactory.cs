@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DebugAndTrace;
 using MTCG.Data.Cards.Specialties;
 using MTCG.Data.Cards.Types;
+using MTCG.Data.Utils;
 using MTCG.Models;
 
 namespace MTCG.Data.Cards
@@ -19,36 +21,28 @@ namespace MTCG.Data.Cards
             };
         }
 
-        /// <summary>
-        /// Generic method for getting for example an enum from a string
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="value"></param>
-        /// <returns>True if conversion is success, otherwise false</returns>
-        private static (bool, T result) IsParsable<T>(this string value) where T : struct
+        private static CardType GetCardType(this Card card)
         {
-            // Check if string is in the enum list
-            // See: https://stackoverflow.com/a/49792748
-            return (Enum.TryParse<T>(value, true, out T result), result);
+            return card.Name.EndsWith("Spell") ? CardType.Spell : CardType.Monster;
         }
 
         private static MonsterType GetMonsterType(this Card card)
         {
-            (bool result, MonsterType monsterType) = card.Name.IsParsable<MonsterType>();
-            // if no matches, we can use human instead :P
-            return result ? monsterType : MonsterType.Human;
-        }
-
-        private static CardType GetCardType(this Card card)
-        {
-            return card.Name.Contains("Spell") ? CardType.Spell : CardType.Monster;
+            return card.Name.Parse<MonsterType>();
         }
 
         private static Element GetCardElement(this Card card)
         {
-            (bool result, Element element) = card.Name.IsParsable<Element>();
-            // if no matches, we use none element 
-            return result ? element : Element.None;
+            try
+            {
+                return card.Name.Parse<Element>();
+            }
+            catch (InvalidOperationException)
+            {
+                Element element = card.GenerateElement();
+                card.Name = element + card.Name;
+                return element;
+            }
         }
 
         private static ICard SpellCard(Card card)
@@ -63,8 +57,6 @@ namespace MTCG.Data.Cards
                 case Element.Regular:
                     break;
                 case Element.Fire:
-                    break;
-                case Element.None:
                     break;
                 default:
                     TraceLogger.Instance.WriteLine("new SpellCard does not have any specialties.");
@@ -109,6 +101,23 @@ namespace MTCG.Data.Cards
                     break;
             }
             return new MonsterCard(card, monsterType, element, specialties);
+        }
+
+        /// <summary>
+        /// Generic method for getting an enum from a string
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="value"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <returns>The single enum that was found, if no matches or when more than one enum was found, it throws an Exception</returns>
+        private static T Parse<T>(this string value) where T : struct
+        {
+            // Check if string is in the enum list
+            // See: https://stackoverflow.com/a/49792748
+            // And: https://stackoverflow.com/a/41839209
+            Enum.TryParse(Enum.GetNames(typeof(T)).Single(value.Contains), false, out T result);
+            return result;
+
         }
     }
 }
