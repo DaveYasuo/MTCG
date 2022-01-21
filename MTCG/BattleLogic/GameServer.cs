@@ -48,7 +48,6 @@ namespace MTCG.BattleLogic
         {
             while (_running)
             {
-                //Console.WriteLine("Game");
                 try
                 {
                     if (_queue.Count < 2)
@@ -68,10 +67,10 @@ namespace MTCG.BattleLogic
                     _tasks[id] = task;
                     // Remove task from collection when finished
                     task.ContinueWith(t =>
-                   {
-                       if (t == null) return;
-                       _tasks.TryRemove(id, out t);
-                   }, token);
+                    {
+                        if (t == null) return;
+                        _tasks.TryRemove(id, out t);
+                    }, token);
                 }
                 catch (Exception)
                 {
@@ -80,16 +79,14 @@ namespace MTCG.BattleLogic
             }
         }
 
-        private void Game(IPlayer player1, IPlayer player2)
+        private static void Game(IPlayer player1, IPlayer player2)
         {
             Battle battle = new Battle(player1, player2, new BattleLog(player1, player2));
             battle.StartGame();
             BattleResult result = battle.GetResult();
-            if (DataHandler.UpdateGameResult(result, player1.Username, player2.Username))
-            {
-                player1.InGame = false;
-                player2.InGame = false;
-            };
+            if (!DataHandler.UpdateGameResult(result, player1.Username, player2.Username)) return;
+            player1.InGame = false;
+            player2.InGame = false;
         }
 
         public void Stop()
@@ -122,7 +119,7 @@ namespace MTCG.BattleLogic
             player.InGame = true;
         }
 
-        public List<string> Play(string username, List<Card> rawCards)
+        public List<object> Play(string username, List<Card> rawCards)
         {
             List<ICard> cards = rawCards.ConvertAll(CardFactory.BuildCard);
             IPlayer player = new Player(username, cards);
@@ -130,7 +127,7 @@ namespace MTCG.BattleLogic
             return GetResult(player);
         }
 
-        private List<string> GetResult(IPlayer player)
+        private static List<object> GetResult(IPlayer player)
         {
             while (player.InGame)
             {

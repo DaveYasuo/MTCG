@@ -1,5 +1,4 @@
-﻿using DebugAndTrace;
-using MTCG.Data.Cards;
+﻿using MTCG.Data.Cards;
 using MTCG.Data.Users;
 using MTCG.Data.Utils;
 using MTCG.Logging;
@@ -51,7 +50,7 @@ namespace MTCG.BattleLogic
         }
         public BattleResult GetResult()
         {
-            return  _battleLog.GetResult();;
+            return  _battleLog.GetResult();
         }
     }
 }
