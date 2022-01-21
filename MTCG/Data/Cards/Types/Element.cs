@@ -2,7 +2,6 @@
 {
     public enum Element
     {
-        None,
         Regular,
         Fire,
         Water
