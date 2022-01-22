@@ -1,7 +1,7 @@
 ﻿using MTCG.Data.Cards;
 using MTCG.Data.Users;
-using MTCG.Data.Utils;
 using MTCG.Logging;
+using MTCG.Utilities;
 
 namespace MTCG.BattleLogic
 {

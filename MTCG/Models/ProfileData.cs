@@ -1,4 +1,4 @@
-﻿namespace MTCG.Database.Schemas
+﻿namespace MTCG.Models
 {
     public class ProfileData : IProfileData
     {

@@ -1,4 +1,6 @@
-﻿namespace MTCG.Database.Schemas
+﻿using MTCG.Models;
+
+namespace MTCG.Database.Schemas
 {
     public class Profile : IProfileData, IStats
     {
@@ -11,7 +13,6 @@
         public int Losses { get; }
         public int Draws { get; }
         public long Coins { get; }
-        public long GamesPlayed => Wins + Losses + Draws;
 
         /// <summary>
         /// Use this ctor for generating new profile for database insertion

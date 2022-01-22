@@ -1,31 +1,32 @@
-﻿namespace MTCG.Database.Schemas
+﻿namespace MTCG.Models
 {
-    public class Score : IStats
+    public class ProfileStats : IStats
     {
-        public long Rank { get; }
         public string Username { get; }
         public short Elo { get; }
         public int Wins { get; }
         public int Losses { get; }
         public int Draws { get; }
+        public long Coins { get; }
+        public long GamesPlayed => Wins + Losses + Draws;
 
         /// <summary>
-        /// Use this ctor for getting stats for the scoreboard
+        /// Use this ctor for getting profile stats from database.
         /// </summary>
-        /// <param name="rank"></param>
         /// <param name="username"></param>
         /// <param name="elo"></param>
         /// <param name="wins"></param>
         /// <param name="losses"></param>
         /// <param name="draws"></param>
-        public Score( long rank, string username, short elo, int wins, int losses, int draws)
+        /// <param name="coins"></param>
+        public ProfileStats(string username, short elo, int wins, int losses, int draws, long coins)
         {
-            Rank = rank;
             Username = username;
             Elo = elo;
             Wins = wins;
             Losses = losses;
             Draws = draws;
+            Coins = coins;
         }
     }
 }

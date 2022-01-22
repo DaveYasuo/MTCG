@@ -4,8 +4,8 @@ using System.Linq;
 using DebugAndTrace;
 using MTCG.Data.Cards.Specialties;
 using MTCG.Data.Cards.Types;
-using MTCG.Data.Utils;
 using MTCG.Models;
+using MTCG.Utilities;
 
 namespace MTCG.Data.Cards
 {
@@ -21,7 +21,7 @@ namespace MTCG.Data.Cards
             };
         }
 
-        private static CardType GetCardType(this Card card)
+        public static CardType GetCardType(this Card card)
         {
             return card.Name.EndsWith("Spell") ? CardType.Spell : CardType.Monster;
         }
