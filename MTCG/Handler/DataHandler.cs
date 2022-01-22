@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using DebugAndTrace;
 using MTCG.BattleLogic;
+using MTCG.Data.Cards.Types;
 using MTCG.Database.PostgreSql;
 using MTCG.Database.Schemas;
 using Npgsql;
 using MTCG.Models;
+using NpgsqlTypes;
+using ServerModule.Responses;
 
 namespace MTCG.Handler
 {
@@ -24,7 +27,8 @@ namespace MTCG.Handler
         {
             Log.WriteLine("Starting DB");
             //using Postgres postgres = new Postgres(Log, true);
-            using Postgres postgres = new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db", Log, true);
+            using Postgres postgres =
+                new Postgres("host.docker.internal", "5432", "swe1user", "swe1pw", "swe1db", Log, true);
             ConnectionString = postgres.ConnString;
             Log.WriteLine("DB started");
         }
@@ -54,7 +58,8 @@ namespace MTCG.Handler
             // two sql statements but one transaction
             // See: https://stackoverflow.com/a/175138
             const string credentialsSql = "INSERT INTO credentials (username,password,role) VALUES (@p1,@p2,@p3)";
-            const string profileSql = "INSERT INTO profile (username,name,bio,image,elo,wins,losses,draws,coins) VALUES (@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9)";
+            const string profileSql =
+                "INSERT INTO profile (username,name,bio,image,elo,wins,losses,draws,coins) VALUES (@p1,@p2,@p3,@p4,@p5,@p6,@p7,@p8,@p9)";
             Profile userProfile = new Profile(auth.Username);
             using NpgsqlConnection conn = Connection();
             using NpgsqlTransaction transaction = conn.BeginTransaction();
@@ -144,7 +149,9 @@ namespace MTCG.Handler
                 // See: https://github.com/npgsql/npgsql/issues/2779
                 // fixed issue wrong type
                 // See: https://www.npgsql.org/doc/types/basic.html
-                using (NpgsqlBinaryImporter importer = conn.BeginBinaryImport("COPY cards (id, card_name, damage, package, deck) FROM STDIN (FORMAT binary)"))
+                using (NpgsqlBinaryImporter importer =
+                    conn.BeginBinaryImport(
+                        "COPY cards (id, card_name, damage, package, deck) FROM STDIN (FORMAT binary)"))
                 {
                     foreach (var card in cards)
                     {
@@ -155,8 +162,10 @@ namespace MTCG.Handler
                         importer.Write(packageId);
                         importer.Write(false);
                     }
+
                     importer.Complete();
                 }
+
                 transaction.Commit();
                 return true;
             }
@@ -189,18 +198,21 @@ namespace MTCG.Handler
             try
             {
                 int affectedRows;
-                using (NpgsqlCommand cmd = new NpgsqlCommand("UPDATE credentials SET token=@p1 WHERE username=@p2", conn, transaction))
+                using (NpgsqlCommand cmd = new NpgsqlCommand("UPDATE credentials SET token=@p1 WHERE username=@p2",
+                    conn, transaction))
                 {
                     cmd.Parameters.AddWithValue("p1", token);
                     cmd.Parameters.AddWithValue("p2", username);
                     cmd.Prepare();
                     affectedRows = cmd.ExecuteNonQuery();
                 }
+
                 if (affectedRows != 0 && affectedRows != -1)
                 {
                     transaction.Commit();
                     return true;
                 }
+
                 transaction.Rollback();
                 return false;
             }
@@ -222,7 +234,9 @@ namespace MTCG.Handler
             using NpgsqlConnection conn = Connection();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT token, username, password, role FROM credentials WHERE username=@p1", conn);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT token, username, password, role FROM credentials WHERE username=@p1",
+                        conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -252,7 +266,9 @@ namespace MTCG.Handler
             using NpgsqlConnection conn = Connection();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, name, bio, image, elo, wins, losses, draws, coins FROM profile WHERE username=@p1", conn);
+                using NpgsqlCommand cmd = new NpgsqlCommand(
+                    "SELECT username, name, bio, image, elo, wins, losses, draws, coins FROM profile WHERE username=@p1",
+                    conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -267,7 +283,7 @@ namespace MTCG.Handler
                     reader.SafeGet<int>("losses"),
                     reader.SafeGet<int>("draws"),
                     reader.SafeGet<long>("coins")
-                        );
+                );
                 return reader.Read() ? null : user;
             }
             catch (Exception e)
@@ -318,6 +334,7 @@ namespace MTCG.Handler
             {
                 return false;
             }
+
             using NpgsqlConnection conn = Connection();
             using NpgsqlTransaction transaction = conn.BeginTransaction();
             try
@@ -331,24 +348,29 @@ namespace MTCG.Handler
                     profileCmd.Prepare();
                     result = profileCmd.ExecuteNonQuery() == 1;
                 }
+
                 if (!result) return false;
                 object pkIdResult;
                 // Select first created package 
                 // See: https://kb.objectrocket.com/postgresql/how-to-use-the-postgres-to-select-first-record-1271
-                using (NpgsqlCommand packageIdCmd = new NpgsqlCommand("SELECT id from packages LIMIT 1", conn, transaction))
+                using (NpgsqlCommand packageIdCmd =
+                    new NpgsqlCommand("SELECT id from packages LIMIT 1", conn, transaction))
                 {
                     packageIdCmd.Prepare();
                     pkIdResult = packageIdCmd.ExecuteScalar();
                 }
+
                 if (pkIdResult == null)
                 {
                     transaction.Rollback();
                     return false;
                 }
+
                 Guid packageId = (Guid)pkIdResult;
 
                 // Update all cards with the associated package id: add username to the cards
-                using (NpgsqlCommand cardCmd = new NpgsqlCommand("UPDATE cards SET username=@p1 WHERE package=@p2", conn, transaction))
+                using (NpgsqlCommand cardCmd = new NpgsqlCommand("UPDATE cards SET username=@p1 WHERE package=@p2",
+                    conn, transaction))
                 {
                     cardCmd.Parameters.AddWithValue("p1", username);
                     cardCmd.Parameters.AddWithValue("p2", packageId);
@@ -361,7 +383,8 @@ namespace MTCG.Handler
                 }
 
                 // Delete package now
-                using (NpgsqlCommand packageDeleteCmd = new NpgsqlCommand("DELETE FROM packages WHERE id=@p1", conn, transaction))
+                using (NpgsqlCommand packageDeleteCmd =
+                    new NpgsqlCommand("DELETE FROM packages WHERE id=@p1", conn, transaction))
                 {
                     packageDeleteCmd.Parameters.AddWithValue("p1", packageId);
                     if (packageDeleteCmd.ExecuteNonQuery() == 1)
@@ -370,6 +393,7 @@ namespace MTCG.Handler
                         return true;
                     }
                 }
+
                 transaction.Rollback();
                 return false;
             }
@@ -392,7 +416,8 @@ namespace MTCG.Handler
             try
             {
                 List<Card> cards = new List<Card>();
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1", conn);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -405,6 +430,7 @@ namespace MTCG.Handler
                     );
                     cards.Add(card);
                 }
+
                 return cards;
             }
             catch (Exception e)
@@ -426,7 +452,8 @@ namespace MTCG.Handler
             try
             {
                 List<Card> cards = new List<Card>();
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1 AND deck=@p2", conn);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT id, card_name, damage FROM cards WHERE username=@p1 AND deck=@p2", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Parameters.AddWithValue("p2", inDeck);
                 cmd.Prepare();
@@ -440,6 +467,7 @@ namespace MTCG.Handler
                     );
                     cards.Add(card);
                 }
+
                 return cards;
             }
             catch (Exception e)
@@ -473,7 +501,8 @@ namespace MTCG.Handler
                 }
 
                 // Set all deck cards of user to false
-                using (NpgsqlCommand setFalseCmd = new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND deck=@p3", conn, transaction))
+                using (NpgsqlCommand setFalseCmd =
+                    new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND deck=@p3", conn, transaction))
                 {
                     setFalseCmd.Parameters.AddWithValue("p1", false);
                     setFalseCmd.Parameters.AddWithValue("p2", username);
@@ -485,7 +514,8 @@ namespace MTCG.Handler
                 // now set the given cards to true
                 foreach (Guid cardId in deck)
                 {
-                    using NpgsqlCommand setTrueCmd = new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND id=@p3", conn, transaction);
+                    using NpgsqlCommand setTrueCmd =
+                        new NpgsqlCommand("UPDATE cards SET deck=@p1 WHERE username=@p2 AND id=@p3", conn, transaction);
                     setTrueCmd.Parameters.AddWithValue("p1", true);
                     setTrueCmd.Parameters.AddWithValue("p2", username);
                     setTrueCmd.Parameters.AddWithValue("p3", cardId);
@@ -495,6 +525,7 @@ namespace MTCG.Handler
                     transaction.Rollback();
                     return false;
                 }
+
                 transaction.Commit();
                 return true;
             }
@@ -518,7 +549,9 @@ namespace MTCG.Handler
             using NpgsqlTransaction transaction = conn.BeginTransaction();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET name=@p1, bio=@p2, image=@p3 WHERE username=@p4", conn, transaction);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("UPDATE profile SET name=@p1, bio=@p2, image=@p3 WHERE username=@p4", conn,
+                        transaction);
                 cmd.Parameters.AddWithValue("p1", userData.Name);
                 cmd.Parameters.AddWithValue("p2", userData.Bio);
                 cmd.Parameters.AddWithValue("p3", userData.Image);
@@ -529,6 +562,7 @@ namespace MTCG.Handler
                     transaction.Commit();
                     return true;
                 }
+
                 transaction.Rollback();
                 return false;
             }
@@ -550,7 +584,8 @@ namespace MTCG.Handler
             using NpgsqlConnection conn = Connection();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, name, bio, image FROM profile WHERE username=@p1", conn);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT username, name, bio, image FROM profile WHERE username=@p1", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -580,7 +615,9 @@ namespace MTCG.Handler
             using NpgsqlConnection conn = Connection();
             try
             {
-                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT username, elo, wins, losses, draws, coins FROM profile WHERE username=@p1", conn);
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand(
+                        "SELECT username, elo, wins, losses, draws, coins FROM profile WHERE username=@p1", conn);
                 cmd.Parameters.AddWithValue("p1", username);
                 cmd.Prepare();
                 using NpgsqlDataReader reader = cmd.ExecuteReader();
@@ -615,7 +652,9 @@ namespace MTCG.Handler
             try
             {
                 List<Score> scoreList = new List<Score>();
-                using (NpgsqlCommand cmd = new NpgsqlCommand("SELECT row_number() OVER (ORDER BY elo DESC), username, elo, wins, losses, draws FROM profile LIMIT 10;", conn))
+                using (NpgsqlCommand cmd = new NpgsqlCommand(
+                    "SELECT row_number() OVER (ORDER BY elo DESC), username, elo, wins, losses, draws FROM profile LIMIT 10;",
+                    conn))
                 {
                     cmd.Parameters.AddWithValue("p1", username);
                     cmd.Prepare();
@@ -634,13 +673,15 @@ namespace MTCG.Handler
                         scoreList.Add(playerStats);
                         if (playerStats.Username == username) isInList = true;
                     }
+
                     if (isInList) return scoreList;
                 }
 
                 using (NpgsqlCommand cmd = new NpgsqlCommand(@"
                 WITH cte AS (SELECT row_number() OVER (ORDER BY elo DESC), username, elo, wins, losses, draws FROM profile),
                      current AS (SELECT row_number FROM cte WHERE username =@p1)
-                SELECT cte.* FROM cte, current WHERE ABS(cte.row_number - current.row_number) <= 2 ORDER BY cte.row_number;", conn))
+                SELECT cte.* FROM cte, current WHERE ABS(cte.row_number - current.row_number) <= 2 ORDER BY cte.row_number;",
+                    conn))
                 {
                     cmd.Parameters.AddWithValue("p1", username);
                     cmd.Prepare();
@@ -657,6 +698,7 @@ namespace MTCG.Handler
                         );
                         scoreList.Add(playerStats);
                     }
+
                     return scoreList;
                 }
             }
@@ -679,7 +721,8 @@ namespace MTCG.Handler
         /// <param name="addWinElo"></param>
         /// <param name="addLossElo"></param>
         /// <returns>True if update was successful, else false.</returns>
-        public static bool UpdateGameResult(BattleResult result, string player1, string player2, int winCoins = 3, int lossCoins = 1, int drawCoins = 2, int addWinElo = 3, int addLossElo = -5)
+        public static bool UpdateGameResult(BattleResult result, string player1, string player2, int winCoins = 3,
+            int lossCoins = 1, int drawCoins = 2, int addWinElo = 3, int addLossElo = -5)
         {
 
             using NpgsqlConnection conn = Connection();
@@ -690,7 +733,9 @@ namespace MTCG.Handler
                 {
                     // increment value
                     // See: https://stackoverflow.com/a/10233360
-                    using NpgsqlCommand cmd = new NpgsqlCommand("UPDATE profile SET draws=draws+1, coins=coins+@p1 WHERE username=@p2 OR username=@p3 ", conn, transaction);
+                    using NpgsqlCommand cmd = new NpgsqlCommand(
+                        "UPDATE profile SET draws=draws+1, coins=coins+@p1 WHERE username=@p2 OR username=@p3 ", conn,
+                        transaction);
                     cmd.Parameters.AddWithValue("p1", drawCoins);
                     cmd.Parameters.AddWithValue("p2", player1);
                     cmd.Parameters.AddWithValue("p3", player2);
@@ -700,6 +745,7 @@ namespace MTCG.Handler
                         transaction.Commit();
                         return true;
                     }
+
                     transaction.Rollback();
                     return false;
                 }
@@ -710,6 +756,7 @@ namespace MTCG.Handler
                     return false;
                 }
             }
+
             string loser = result.Winner == player1 ? player2 : player1;
             try
             {
@@ -717,7 +764,8 @@ namespace MTCG.Handler
                 {
                     BatchCommands =
                     {
-                        new NpgsqlBatchCommand("UPDATE profile SET elo=elo+@p1, wins=wins+1, coins=coins+@p2 WHERE username=@p3")
+                        new NpgsqlBatchCommand(
+                            "UPDATE profile SET elo=elo+@p1, wins=wins+1, coins=coins+@p2 WHERE username=@p3")
                         {
                             Parameters =
                             {
@@ -726,7 +774,8 @@ namespace MTCG.Handler
                                 new NpgsqlParameter("p3", result.Winner)
                             }
                         },
-                        new NpgsqlBatchCommand("UPDATE profile SET elo=elo+@p1, losses=losses+1, coins=coins+@p2 WHERE username=@p3")
+                        new NpgsqlBatchCommand(
+                            "UPDATE profile SET elo=elo+@p1, losses=losses+1, coins=coins+@p2 WHERE username=@p3")
                         {
                             Parameters =
                             {
@@ -743,6 +792,281 @@ namespace MTCG.Handler
                     transaction.Commit();
                     return true;
                 }
+
+                transaction.Rollback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get all trading deals from the database
+        /// </summary>
+        /// <returns>A list of deals which can be empty or null on error</returns>
+        public static List<TradingDeal> GetTradingDeals()
+        {
+
+            using NpgsqlConnection conn = Connection();
+            List<TradingDeal> store = new List<TradingDeal>();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_id, type, damage FROM store", conn);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    TradingDeal deal = new TradingDeal(
+                        reader.SafeGet<Guid>("id"),
+                        reader.SafeGet<Guid>("card_id"),
+                        reader.SafeGet<string>("type"),
+                        reader.SafeGet<float>("damage")
+                    );
+                    store.Add(deal);
+                }
+
+                return store;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Adds a card to the store and remove it from deck
+        /// </summary>
+        /// <param name="username"></param>
+        /// <param name="tradingDeal"></param>
+        /// <returns>True on success, else false.</returns>
+        public static bool AddTradingDeal(string username, TradingDeal tradingDeal)
+        {
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                const string dealSql = "INSERT INTO store (id,card_id,type,damage) VALUES (@p1,@p2,@p3,@p4)";
+                const string deckSql = "UPDATE cards SET deck=@p1, store=@p2 WHERE id=@p3 AND username=@p4";
+                using NpgsqlBatch cmd = new NpgsqlBatch(conn, transaction)
+                {
+                    BatchCommands =
+                    {
+                        new NpgsqlBatchCommand(dealSql)
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", tradingDeal.Id),
+                                new NpgsqlParameter("p2", tradingDeal.CardToTrade),
+                                new NpgsqlParameter("p3", tradingDeal.Type),
+                                new NpgsqlParameter("p4", tradingDeal.MinimumDamage)
+                            }
+                        },
+                        new NpgsqlBatchCommand(deckSql)
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", false),
+                                new NpgsqlParameter("p2", tradingDeal.Id),
+                                new NpgsqlParameter("p3", tradingDeal.CardToTrade),
+                                new NpgsqlParameter("p4", username)
+                            }
+                        }
+                    }
+                };
+                cmd.Prepare();
+                if (cmd.ExecuteNonQuery() == 2)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+
+                transaction.Rollback();
+                return false;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Delete accepted card from store and add it to one's own stack
+        /// </summary>
+        /// <param name="dealId"></param>
+        /// <param name="dealCard"></param>
+        /// <param name="tradeCard"></param>
+        /// <returns>True, if trade was a success, else false</returns>
+        public static bool AcceptTradingDeal(Guid dealId, CardWithUsername dealCard, CardWithUsername tradeCard)
+        {
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                const string deleteSql = "DELETE FROM store WHERE id=@p1";
+                const string updateDealCardSql = "UPDATE cards SET username=@p1 WHERE id=@p2";
+                const string updateTradeCardSql = "UPDATE cards SET deck=@p1, username=@p2 WHERE id=@p3";
+                using NpgsqlBatch cmd = new NpgsqlBatch(conn, transaction)
+                {
+                    BatchCommands =
+                    {
+                        new NpgsqlBatchCommand(deleteSql)
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", dealId)
+                            }
+                        },
+                        new NpgsqlBatchCommand(updateDealCardSql)
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", tradeCard.Username),
+                                new NpgsqlParameter("p2", dealCard.Id)
+                            }
+                        },
+                        new NpgsqlBatchCommand(updateTradeCardSql)
+                        {
+                            Parameters =
+                            {
+                                new NpgsqlParameter("p1", false),
+                                new NpgsqlParameter("p2", dealCard.Username),
+                                new NpgsqlParameter("p3", tradeCard.Id)
+                            }
+                        }
+                    }
+                };
+                cmd.Prepare();
+                cmd.ExecuteNonQuery();
+                transaction.Commit();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Get the trading card with the specific id from store.
+        /// </summary>
+        /// <returns>A card on success or null, if no cards are in store</returns>
+        public static TradingDeal GetCardOfStore(string id)
+        {
+            Guid idGuid = Guid.Parse(id);
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("SELECT id, card_id, type, damage FROM store WHERE id=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", idGuid);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                TradingDeal card = new TradingDeal(
+                    reader.SafeGet<Guid>("id"),
+                    reader.SafeGet<Guid>("card_id"),
+                    reader.SafeGet<string>("type"),
+                    reader.SafeGet<float>("damage")
+                );
+                return reader.Read() ? null : card;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the card with the specific Guid id from cards.
+        /// </summary>
+        /// <returns>A card on success or null, if an error occurred.</returns>
+        public static CardWithUsername GetCard(Guid id)
+        {
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT id, card_name, damage, username FROM cards WHERE id=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", id);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                CardWithUsername card = new CardWithUsername(
+                    reader.SafeGet<Guid>("id"),
+                    reader.SafeGet<string>("card_name"),
+                    reader.SafeGet<float>("damage"),
+                    reader.SafeGet<string>("username")
+                );
+                return reader.Read() ? null : card;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the card with the specific string id from cards.
+        /// </summary>
+        /// <returns>A card on success or null, if an error occurred.</returns>
+        public static CardWithUsername GetCard(string id)
+        {
+            Guid idGuid = Guid.Parse(id);
+            using NpgsqlConnection conn = Connection();
+            try
+            {
+                using NpgsqlCommand cmd =
+                    new NpgsqlCommand("SELECT id, card_name, damage, username FROM cards WHERE id=@p1", conn);
+                cmd.Parameters.AddWithValue("p1", idGuid);
+                cmd.Prepare();
+                using NpgsqlDataReader reader = cmd.ExecuteReader();
+                if (!reader.Read()) return null;
+                CardWithUsername card = new CardWithUsername(
+                    reader.SafeGet<Guid>("id"),
+                    reader.SafeGet<string>("card_name"),
+                    reader.SafeGet<float>("damage"),
+                    reader.SafeGet<string>("username")
+                );
+                return reader.Read() ? null : card;
+            }
+            catch (Exception e)
+            {
+                Log.WriteLine(e.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Deletes card with the given ID from the store.
+        /// </summary>
+        /// <param name="storeId"></param>
+        /// <returns>True on success, else false</returns>
+        public static bool DeleteTradingDeal(string storeId)
+        {
+            Guid idGuid = Guid.Parse(storeId);
+            using NpgsqlConnection conn = Connection();
+            using NpgsqlTransaction transaction = conn.BeginTransaction();
+            try
+            {
+                using NpgsqlCommand cmd = new NpgsqlCommand("DELETE FROM store WHERE id=@p1", conn, transaction);
+                cmd.Parameters.AddWithValue("p1", idGuid);
+                cmd.Prepare();
+                if (cmd.ExecuteNonQuery() == 1)
+                {
+                    transaction.Commit();
+                    return true;
+                }
+
                 transaction.Rollback();
                 return false;
             }

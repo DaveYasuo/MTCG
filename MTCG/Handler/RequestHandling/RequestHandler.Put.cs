@@ -18,9 +18,10 @@ namespace MTCG.Handler.RequestHandling
         {
             string username = data.Authentication.Username;
             if (username is null) return Response.Status(Status.BadRequest);
+            string payload = data.Payload;
+            if (string.IsNullOrEmpty(payload)) return Response.Status(Status.BadRequest);
             try
             {
-                string payload = data.Payload;
                 List<Guid> deck = JsonSerializer.Deserialize<List<Guid>>(payload);
                 if (deck is not { Count: 4 }) return Response.PlainText("Wrong amount of cards selected", Status.BadRequest);
                 return DataHandler.UpdateDeck(deck, username) ? Response.PlainText("Deck updated", Status.Created) : Response.PlainText("Failed to update deck", Status.BadRequest);

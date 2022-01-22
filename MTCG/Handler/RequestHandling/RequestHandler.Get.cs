@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using MTCG.Database.Schemas;
 using MTCG.Models;
@@ -94,9 +93,18 @@ namespace MTCG.Handler.RequestHandling
             return profile is null ? Response.Status(Status.BadRequest) : Response.Json(profile);
         }
 
+        /// <summary>
+        /// Gets all current available trading deals
+        /// </summary>
+        /// <param name="arg"></param>
+        /// <returns>Json response object with the trading deals or error response</returns>
         private static Response GetTradings(RequestData arg)
         {
-            throw new NotImplementedException();
+            string user = arg.Authentication.Username;
+            if (user is null) return Response.Status(Status.BadRequest);
+            List<TradingDeal> tradingDeals = DataHandler.GetTradingDeals();
+            if (tradingDeals == null) return Response.Status(500);
+            return tradingDeals.Count == 0 ? Response.PlainText("No trading deals in bazaar") : Response.Json(tradingDeals);
         }
     }
 }

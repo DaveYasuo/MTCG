@@ -14,6 +14,7 @@ namespace MTCG.Handler.RequestHandling
     // See: https://www.geeksforgeeks.org/partial-classes-in-c-sharp/
     // Naming convention
     // See: https://stackoverflow.com/questions/1478610/naming-conventions-for-partial-class-files
+    /// <inheritdoc />
     public partial class RequestHandler : IRequestHandler
     {
         // Battle Logic

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.Json;
+using MTCG.Data.Cards;
+using MTCG.Data.Cards.Types;
 using MTCG.Database.Schemas;
 using MTCG.Models;
 using ServerModule.Mapping;
@@ -11,10 +13,16 @@ namespace MTCG.Handler.RequestHandling
 {
     public partial class RequestHandler
     {
+        /// <summary>
+        /// Acquire package if exists
+        /// </summary>
+        /// <param name="requestData"></param>
+        /// <returns></returns>
         private static Response PostTransactionPackages(RequestData requestData)
         {
             const int packageCost = 5;
             string username = requestData.Authentication.Username;
+            if (username is null) return Response.Status(Status.BadRequest);
             long coins = DataHandler.GetUserCoins(username);
             if (coins is -1) return Response.Status(Status.InternalServerError);
             if (coins - packageCost >= 0)
@@ -22,11 +30,59 @@ namespace MTCG.Handler.RequestHandling
             return Response.PlainText("Not enough coins", Status.BadRequest);
         }
 
+        /// <summary>
+        /// Add a trading deal to the store or accept a deal.
+        /// </summary>
+        /// <param name="requestData"></param>
+        /// <returns>Response Ok on success, else error response</returns>
         private static Response PostTradings(RequestData requestData)
         {
-            throw new NotImplementedException();
+            string username = requestData.Authentication.Username;
+            string payload = requestData.Payload;
+            if (username is null || string.IsNullOrEmpty(payload)) return Response.Status(Status.BadRequest);
+            // if no pathVariable is present, add a deal
+            if (requestData.PathVariable == null)
+            {
+                try
+                {
+                    TradingDeal deal = JsonSerializer.Deserialize<TradingDeal>(payload);
+                    if (deal == null) return Response.Status(Status.BadRequest);
+                    if (DataHandler.GetCard(deal.CardToTrade).Username != username) return Response.Status(Status.Forbidden);
+                    return DataHandler.AddTradingDeal(username, deal) ? Response.PlainText("Deal added", Status.Created) : Response.PlainText("Deal cannot be added",Status.Forbidden);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    return Response.Status(Status.BadRequest);
+                }
+            }
+            //  else accept the deal if requirements are met
+            try
+            {
+                string dealId = requestData.PathVariable;
+                TradingDeal cardOfStore = DataHandler.GetCardOfStore(dealId);
+                string tradeCardId = JsonSerializer.Deserialize<string>(payload);
+                CardWithUsername tradeCard = DataHandler.GetCard(tradeCardId);
+                if (tradeCard == null || tradeCard.Username != username) return Response.Status(Status.Forbidden);
+                if (!(tradeCard.Damage >= cardOfStore.MinimumDamage) || tradeCard.GetCardType() != cardOfStore.GetCardType()) return Response.PlainText("Trade requirements not met");
+                CardWithUsername dealCard = DataHandler.GetCard(cardOfStore.CardToTrade);
+                if (dealCard.Username == username) return Response.PlainText("Cannot trade with oneself");
+                return DataHandler.AcceptTradingDeal(cardOfStore.Id, dealCard, tradeCard)
+                    ? Response.PlainText("Trade successful")
+                    : Response.PlainText("Trade failed");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return Response.Status(Status.BadRequest);
+            }
         }
 
+        /// <summary>
+        /// Play game
+        /// </summary>
+        /// <param name="requestData"></param>
+        /// <returns></returns>
         private Response PostBattles(RequestData requestData)
         {
             string username = requestData.Authentication.Username;
@@ -35,7 +91,7 @@ namespace MTCG.Handler.RequestHandling
             // Get all cards in deck, can be null, empty or not empty
             List<Card> cards = DataHandler.GetUserDeck(username, true);
             if (cards is null) return Response.Status(Status.InternalServerError);
-            if (cards.Count == 0) return Response.PlainText("Configure cards in deck first");
+            if (cards.Count != 4) return Response.PlainText("Configure cards in deck first");
             if (!_auth.UpdateStatus(token, UserStatus.Occupied, UserStatus.Available)) return Response.PlainText("User already in game");
             try
             {
@@ -45,7 +101,7 @@ namespace MTCG.Handler.RequestHandling
             catch (Exception e)
             {
                 _log.WriteLine(e.Message);
-                return Response.Status(400);
+                return Response.Status(500);
             }
             finally
             {
@@ -66,9 +122,10 @@ namespace MTCG.Handler.RequestHandling
             // triple check: once with username from AuthorizationToken (request), and once from database (role). Second can happen when manually alter db-table.
             // Lastly check if Token from Request is equal to the token in the database
             if (!data.Authentication.Username.Equals("admin") || credentials.Role != Role.Admin || !data.Authentication.Token.Equals(credentials.Token)) return Response.Status(Status.Forbidden);
+            string payload = data.Payload;
+            if (string.IsNullOrEmpty(payload)) return Response.Status(Status.BadRequest);
             try
             {
-                string payload = data.Payload;
                 List<Card> package = JsonSerializer.Deserialize<List<Card>>(payload);
                 if (package is not { Count: 5 }) return Response.Status(Status.BadRequest);
                 return DataHandler.AddPackage(package) ? Response.PlainText("Package added", Status.Created) : Response.PlainText("Failed to create package", Status.BadRequest);
@@ -89,7 +146,6 @@ namespace MTCG.Handler.RequestHandling
         {
             string payload = requestData.Payload;
             if (payload == null) return Response.Status(Status.BadRequest);
-            //User user = payload.GetObject<User>();
             try
             {
                 // since payload has all arguments that User-class has, we can just use the User object from Server for deserialization
