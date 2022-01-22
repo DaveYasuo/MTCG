@@ -144,8 +144,6 @@ namespace ServerModule.Tcp.Client
                     }
                 }
                 payload = body.ToString();
-                IRequest.CheckPayload(ref payload, headers["Content-Type"]);
-                if (payload == null) return null;
             }
             Request request = new Request(method, target, version, headers, payload, pathVariable, requestParam);
             return request;

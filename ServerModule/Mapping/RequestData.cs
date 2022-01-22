@@ -21,17 +21,15 @@ namespace ServerModule.Mapping
         private static Dictionary<string, string> SetRequestParameter(string requestParam)
         {
             Dictionary<string, string> parameter = new Dictionary<string, string>();
-            if (requestParam != null)
+            if (requestParam == null) return parameter;
+            string[] entries = requestParam.Split('&');
+            foreach (string entry in entries)
             {
-                string[] entries = requestParam.Split('&');
-                foreach (string entry in entries)
-                {
-                    string[] tmp = entry.Split('=');
-                    if (tmp.Length != 2) continue;
-                    string key = tmp[0];
-                    string val = tmp[1];
-                    parameter.Add(key, val);
-                }
+                string[] tmp = entry.Split('=');
+                if (tmp.Length != 2) continue;
+                string key = tmp[0];
+                string val = tmp[1];
+                parameter.Add(key, val);
             }
             return parameter;
         }
