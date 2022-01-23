@@ -124,6 +124,5 @@ namespace MTCG.Logging
         /// </summary>
         /// <returns>A BattleResult object containing the battle results.</returns>
         public BattleResult GetResult() => _winner == null ? new BattleResult(LogList) : new BattleResult(_winner, _winner == _player1.Username ? _player2.Username : _player1.Username, LogList);
-
     }
 }

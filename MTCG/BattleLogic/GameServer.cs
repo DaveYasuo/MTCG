@@ -7,7 +7,6 @@ using DebugAndTrace;
 using MTCG.Data.Cards;
 using MTCG.Data.Users;
 using MTCG.Handler;
-using MTCG.Logging;
 using MTCG.Models;
 using ServerModule;
 
@@ -81,7 +80,7 @@ namespace MTCG.BattleLogic
 
         private static void Game(IPlayer player1, IPlayer player2)
         {
-            Battle battle = new Battle(player1, player2, new BattleLog(player1, player2));
+            Battle battle = new Battle(player1, player2);
             battle.StartGame();
             BattleResult result = battle.GetResult();
             if (!DataHandler.UpdateGameResult(result, player1.Username, player2.Username)) return;

@@ -5,17 +5,17 @@ using MTCG.Utilities;
 
 namespace MTCG.BattleLogic
 {
-    class Battle
+    public class Battle
     {
         private readonly IPlayer _player1;
         private readonly IPlayer _player2;
         private readonly IBattleLog _battleLog;
 
-        public Battle(IPlayer player1, IPlayer player2, IBattleLog battleLog)
+        public Battle(IPlayer player1, IPlayer player2)
         {
             _player1 = player1;
             _player2 = player2;
-            _battleLog = battleLog;
+            _battleLog = new BattleLog(player1, player2);
         }
 
         public void StartGame()
