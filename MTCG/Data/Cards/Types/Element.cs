@@ -4,6 +4,10 @@
     {
         Regular,
         Fire,
-        Water
+        Water,
+        Ice,
+        Wind,
+        Earth,
+        Wood
     }
 }

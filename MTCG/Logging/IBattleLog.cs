@@ -14,5 +14,6 @@ namespace MTCG.Logging
         void AddElementReaction(string myElement, string otherElement);
         void AddEffectInfo(string infoMessage);
         void AddEffectiveDamage(float myDamage, float otherDamage);
+        void AddBonusDamage(int bonusDmg1, int bonusDmg2);
     }
 }

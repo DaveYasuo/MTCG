@@ -48,7 +48,7 @@ namespace MTCG.Handler.RequestHandling
                     TradingDeal deal = JsonSerializer.Deserialize<TradingDeal>(payload);
                     if (deal == null) return Response.Status(Status.BadRequest);
                     if (DataHandler.GetCard(deal.CardToTrade).Username != username) return Response.Status(Status.Forbidden);
-                    return DataHandler.AddTradingDeal(username, deal) ? Response.PlainText("Deal added", Status.Created) : Response.PlainText("Deal cannot be added",Status.Forbidden);
+                    return DataHandler.AddTradingDeal(username, deal) ? Response.PlainText("Deal added", Status.Created) : Response.PlainText("Deal cannot be added", Status.Forbidden);
                 }
                 catch (Exception e)
                 {
@@ -61,6 +61,7 @@ namespace MTCG.Handler.RequestHandling
             {
                 string dealId = requestData.PathVariable;
                 TradingDeal cardOfStore = DataHandler.GetCardOfStore(dealId);
+                if (cardOfStore == null) return Response.Status(Status.BadRequest);
                 string tradeCardId = JsonSerializer.Deserialize<string>(payload);
                 CardWithUsername tradeCard = DataHandler.GetCard(tradeCardId);
                 if (tradeCard == null || tradeCard.Username != username) return Response.Status(Status.Forbidden);

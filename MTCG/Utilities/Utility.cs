@@ -28,7 +28,6 @@ namespace MTCG.Utilities
             foreach (ISpecialty specialty in card.Specialties) specialty.ApplyEffect(card, other, ref myDamage, ref otherDamage, in battleLog);
             // player2
             foreach (ISpecialty specialty in other.Specialties) specialty.ApplyEffect(other, card, ref otherDamage, ref myDamage, in battleLog);
-            battleLog.AddEffectiveDamage(myDamage, otherDamage);
             return (myDamage, otherDamage);
         }
 
@@ -45,15 +44,28 @@ namespace MTCG.Utilities
             if (card.Element == other.Element) return;
             switch (card.Element)
             {
-                case Element.Water when other.Element == Element.Fire:
-                case Element.Fire when other.Element == Element.Regular:
-                case Element.Regular when other.Element == Element.Water:
+                // Elemental advantages
+                // See: https://www.google.com/url?sa=i&url=https%3A%2F%2Fthepolariscollective.wordpress.com%2F2014%2F05%2F25%2Felemental-introducing-the-elementals%2F&psig=AOvVaw1zzQSpW6woXFS6VASWgCnk&ust=1642983134095000&source=images&cd=vfe&ved=0CAsQjRxqFwoTCJCe9pDTxvUCFQAAAAAdAAAAABAD
+                // card1 has an advantage
+                case Element.Regular when other.Element is Element.Water:
+                case Element.Water when other.Element is Element.Earth or Element.Fire:
+                case Element.Fire when other.Element is Element.Ice or Element.Regular or Element.Wood:
+                case Element.Ice when other.Element is Element.Water or Element.Wind or Element.Wood:
+                case Element.Wind when other.Element is Element.Earth or Element.Fire or Element.Water:
+                case Element.Wood when other.Element is Element.Earth or Element.Water or Element.Wind:
+                case Element.Earth when other.Element is Element.Fire or Element.Ice:
                     battleLog.AddElementReaction(card.Element.ToString(), other.Element.ToString());
                     MultiplyAndDivideBy(ref myDamage, ref otherDamage, 2);
                     return;
-                case Element.Water when other.Element == Element.Regular:
-                case Element.Regular when other.Element == Element.Fire:
-                case Element.Fire when other.Element == Element.Water:
+
+                // card2 has an advantage
+                case Element.Regular when other.Element is Element.Fire:
+                case Element.Water when other.Element is Element.Ice or Element.Wood or Element.Wind:
+                case Element.Fire when other.Element is Element.Wind or Element.Water or Element.Earth:
+                case Element.Ice when other.Element is Element.Earth or Element.Fire:
+                case Element.Wind when other.Element is Element.Ice or Element.Wood:
+                case Element.Wood when other.Element is Element.Ice or Element.Fire:
+                case Element.Earth when other.Element is Element.Water or Element.Wind or Element.Wood:
                     battleLog.AddElementReaction(other.Element.ToString(), card.Element.ToString());
                     MultiplyAndDivideBy(ref otherDamage, ref myDamage, 2);
                     return;
@@ -86,6 +98,20 @@ namespace MTCG.Utilities
             // Null suppression
             // See: https://stackoverflow.com/a/54724546
             return (Element)values.GetValue(Rnd.Next(values.Length))!;
+        }
+
+        public static int GetRandomIntegerBetween(this int maxValue)
+        {
+            return Rnd.Next(maxValue);
+        }
+
+        public static void BonusRound(ref float damage1, ref float damage2, in IBattleLog battleLog)
+        {
+            int bonusDmg1 = GetRandomIntegerBetween(10);
+            int bonusDmg2 = GetRandomIntegerBetween(10);
+            damage1 += bonusDmg1;
+            damage2 += bonusDmg2;
+            battleLog.AddBonusDamage(bonusDmg1, bonusDmg2);
         }
     }
 }

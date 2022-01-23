@@ -50,7 +50,8 @@ namespace MTCG.Logging
         /// <param name="otherElement"></param>
         public void AddElementReaction(string myElement, string otherElement)
         {
-            _log.Description.Add(myElement + " is effective against " + otherElement);
+            _log.Description.Add(myElement + " is effective against " + otherElement + ", so damage is doubled");
+            _log.Description.Add(otherElement + " is not effective against " + myElement + ", so damage is halved");
         }
 
         /// <summary>
@@ -71,6 +72,12 @@ namespace MTCG.Logging
         {
             _log.Effective = myDamage + " VS " + otherDamage;
 
+        }
+
+        public void AddBonusDamage(int bonusDmg1, int bonusDmg2)
+        {
+            _log.Description.Add($"{_player1.LastPlayedCard} gets additional {bonusDmg1} damage boost.");
+            _log.Description.Add($"{_player2.LastPlayedCard} gets additional {bonusDmg2} damage boost.");
         }
 
         /// <summary>

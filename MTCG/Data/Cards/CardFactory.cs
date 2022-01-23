@@ -47,7 +47,6 @@ namespace MTCG.Data.Cards
 
         private static ICard SpellCard(Card card)
         {
-            // No specialties by now todo
             List<ISpecialty> specialties = new List<ISpecialty>();
             Element element = card.GetCardElement();
             switch (element)
@@ -55,8 +54,17 @@ namespace MTCG.Data.Cards
                 case Element.Water:
                     break;
                 case Element.Regular:
+                    specialties.Add(new DamageBoost());
                     break;
                 case Element.Fire:
+                    break;
+                case Element.Ice:
+                    break;
+                case Element.Wind:
+                    break;
+                case Element.Earth:
+                    break;
+                case Element.Wood:
                     break;
                 default:
                     TraceLogger.Instance.WriteLine("new SpellCard does not have any specialties.");

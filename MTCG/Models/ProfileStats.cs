@@ -9,6 +9,18 @@
         public int Draws { get; }
         public long Coins { get; }
         public long GamesPlayed => Wins + Losses + Draws;
+        // Win Loss Ratio 
+        // See: https://en.wikipedia.org/wiki/Winning_percentage
+        public float WinLossRatio
+        {
+            get
+            {
+                if (Wins == 0 && Draws == 0) return 0;
+                // Float suffix
+                // See: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/builtin-types/floating-point-numeric-types
+                return ((Wins + 0.5F * Draws) / GamesPlayed);
+            }
+        }
 
         /// <summary>
         /// Use this ctor for getting profile stats from database.
