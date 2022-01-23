@@ -7,21 +7,18 @@ namespace MTCG.BattleLogic
         public bool Draw { get; }
         public string Winner { get; }
         public string Loser { get; }
-        public List<object> Log { get; }
 
 
-        public BattleResult(List<object> log)
+        public BattleResult()
         {
-            Log = log;
             Draw = true;
         }
 
-        public BattleResult(string winner, string loser, List<object> log)
+        public BattleResult(string winner, string loser)
         {
             Draw = false;
             Winner = winner;
             Loser = loser;
-            Log = log;
         }
     }
 }
