@@ -5,7 +5,6 @@ using MTCG.BattleLogic;
 using MTCG.Data.Cards;
 using MTCG.Data.Cards.Types;
 using MTCG.Data.Users;
-using MTCG.Logging;
 
 namespace MTCG_Test
 {
@@ -90,7 +89,7 @@ namespace MTCG_Test
             Assert.Pass("Battle Player 2 wins");
         }
 
-        [Test(Description = "Battle result is draw since both player have the same cards")]
+        [Test(Description = "Battle result is draw since both player have the same card")]
         public void BattleDrawGame()
         {
             Mock<IMonsterCard> mock1 = new Mock<IMonsterCard>();
@@ -98,7 +97,7 @@ namespace MTCG_Test
             Mock<ICard> humanMock = mock1.As<ICard>();
             humanMock.Setup(card => card.Damage).Returns(100);
             ICard human = humanMock.Object;
-
+            
             Mock<IPlayer> player1Mock = new Mock<IPlayer>();
             player1Mock.SetupGet(player => player.Username).Returns("Player1");
             player1Mock.SetupGet(player => player.Log).Returns(new List<object>());

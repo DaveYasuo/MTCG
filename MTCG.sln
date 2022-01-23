@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServerModule", "ServerModul
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugAndTrace", "DebugAndTrace\DebugAndTrace.csproj", "{084339C1-7756-4C5D-98E4-E9554EC48F10}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MTCG-Test", "MTCG-Test\MTCG-Test.csproj", "{DFB0F068-8CFF-426C-984C-7396308753DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MTCG-Test", "MTCG-Test\MTCG-Test.csproj", "{DFB0F068-8CFF-426C-984C-7396308753DB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
