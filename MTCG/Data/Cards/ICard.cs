@@ -1,7 +1,6 @@
 ﻿using MTCG.Data.Cards.Types;
 using System.Collections.Generic;
 using MTCG.Data.Cards.Specialties;
-using MTCG.Logging;
 
 namespace MTCG.Data.Cards
 {
