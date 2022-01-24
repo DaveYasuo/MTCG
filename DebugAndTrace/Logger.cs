@@ -3,11 +3,6 @@ using System.Diagnostics;
 
 namespace DebugAndTrace
 {
-    public interface ILogger
-    {
-        void WriteLine(object text);
-    }
-
     // Singleton-pattern
     // See: "https://de.wikipedia.org/wiki/Liste_von_Singleton-Implementierungen#Implementierung_in_C#"
     // Somewhat of a Factory pattern? 
