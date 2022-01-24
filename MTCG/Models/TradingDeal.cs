@@ -5,11 +5,6 @@ namespace MTCG.Models
 {
     public class TradingDeal
     {
-        public Guid Id { get; }
-        public Guid CardToTrade { get; }
-        public string Type { get; }
-        public float MinimumDamage { get; }
-
         public TradingDeal(Guid id, Guid cardToTrade, string type, float minimumDamage)
         {
             Id = id;
@@ -17,6 +12,11 @@ namespace MTCG.Models
             Type = type;
             MinimumDamage = minimumDamage;
         }
+
+        public Guid Id { get; }
+        public Guid CardToTrade { get; }
+        public string Type { get; }
+        public float MinimumDamage { get; }
 
         public CardType GetCardType()
         {

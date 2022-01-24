@@ -17,9 +17,10 @@ namespace MTCG.Handler.RequestHandling
     /// <inheritdoc />
     public partial class RequestHandler : IRequestHandler
     {
+        private readonly Authentication _auth;
+
         // Battle Logic
         private readonly GameServer _game;
-        private readonly Authentication _auth;
         private readonly ILogger _log;
 
         public RequestHandler(GameServer game, Authentication auth, ILogger logger)
@@ -46,7 +47,7 @@ namespace MTCG.Handler.RequestHandling
 
         private static Dictionary<string, Func<RequestData, Response>> GetHandler()
         {
-            Dictionary<string, Func<RequestData, Response>> getHandler =
+            var getHandler =
                 new Dictionary<string, Func<RequestData, Response>>
                 {
                     { "/users", GetUser },
@@ -54,50 +55,49 @@ namespace MTCG.Handler.RequestHandling
                     { "/score", GetScore },
                     { "/deck", GetDeck },
                     { "/stats", GetStats },
-                    { "/tradings", GetTradings },
+                    { "/tradings", GetTradings }
                 };
             return getHandler;
         }
 
         private Dictionary<string, Func<RequestData, Response>> PostHandler()
         {
-            Dictionary<string, Func<RequestData, Response>> postHandler = new Dictionary<string, Func<RequestData, Response>>
+            var postHandler = new Dictionary<string, Func<RequestData, Response>>
             {
                 { "/users", PostUser },
-                { "/sessions", PostSessions},
-                { "/packages", PostPackages},
-                { "/transactions/packages", PostTransactionPackages},
+                { "/sessions", PostSessions },
+                { "/packages", PostPackages },
+                { "/transactions/packages", PostTransactionPackages },
                 { "/battles", PostBattles },
-                { "/tradings", PostTradings },
+                { "/tradings", PostTradings }
             };
             return postHandler;
         }
 
         private Dictionary<string, Func<RequestData, Response>> PutHandler()
         {
-            Dictionary<string, Func<RequestData, Response>> putHandler = new Dictionary<string, Func<RequestData, Response>>
+            var putHandler = new Dictionary<string, Func<RequestData, Response>>
             {
                 { "/users", PutUser },
-                { "/deck", PutDeck},
+                { "/deck", PutDeck }
             };
             return putHandler;
-
         }
 
         private static Dictionary<string, Func<RequestData, Response>> DeleteHandler()
         {
-            Dictionary<string, Func<RequestData, Response>> putHandler = new Dictionary<string, Func<RequestData, Response>>
+            var putHandler = new Dictionary<string, Func<RequestData, Response>>
             {
-                {  "/tradings", DeleteTradings },
+                { "/tradings", DeleteTradings }
             };
             return putHandler;
-
         }
 
         private static Dictionary<string, Func<RequestData, Response>> ErrorHandler()
         {
             return new Dictionary<string, Func<RequestData, Response>> { { "/", ErrorMethod } };
         }
+
         private static Response ErrorMethod(RequestData data)
         {
             return Response.Status(Status.MethodNotAllowed);

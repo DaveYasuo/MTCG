@@ -2,18 +2,20 @@
 using System.Diagnostics;
 using DebugAndTrace;
 using ServerModule.Utility;
+using Char = ServerModule.Utility.Char;
 
 namespace MTCG.Docker
 {
     /// <summary>
-    /// Get Docker Container Environment Variables
+    ///     Get Docker Container Environment Variables
     /// </summary>
     public static class PgEnv
     {
         /// <summary>
-        /// Container Username of the Postgres DB-Image
+        ///     Container Username of the Postgres DB-Image
         /// </summary>
         public static readonly string Username = "POSTGRES_USER";
+
         public static readonly string Password = "POSTGRES_PASSWORD";
         public static readonly string Database = "POSTGRES_DB";
         public static readonly string Port = "POSTGRES_PORT";
@@ -32,13 +34,13 @@ namespace MTCG.Docker
             SetEnvironmentVariable(Database, GetCommand(containerName, Database), "swe1db");
 
             // Optional get the first matched exposed Port of the docker container
-            string rawPort = ExecuteCommand($"docker ps --filter \"name={containerName}\" --format \"{{{{.Ports}}}}\"");
-            ParsePort(rawPort, out string postgresPort);
+            var rawPort = ExecuteCommand($"docker ps --filter \"name={containerName}\" --format \"{{{{.Ports}}}}\"");
+            ParsePort(rawPort, out var postgresPort);
             SetEnvironmentVariable(Port, null, postgresPort);
         }
 
         /// <summary>
-        /// Gets the Command string from container with the specific environment variable
+        ///     Gets the Command string from container with the specific environment variable
         /// </summary>
         /// <param name="containerName"></param>
         /// <param name="envVariable"></param>
@@ -49,25 +51,24 @@ namespace MTCG.Docker
         }
 
         /// <summary>
-        /// Gets the first matched port of the raw port.
+        ///     Gets the first matched port of the raw port.
         /// </summary>
         /// <param name="rawPort"></param>
         /// <param name="parsedPort"></param>
         private static void ParsePort(string rawPort, out string parsedPort)
         {
             // Example: 0.0.0.0:5432->5432/tcp 
-            int startIndex = rawPort.IndexOf(Utils.GetChar(ServerModule.Utility.Char.Colon)) + 1;
-            int endIndex = rawPort.IndexOf(Utils.GetChar(ServerModule.Utility.Char.Minus));
+            var startIndex = rawPort.IndexOf(Utils.GetChar(Char.Colon)) + 1;
+            var endIndex = rawPort.IndexOf(Utils.GetChar(Char.Minus));
             if (startIndex >= 0 && rawPort.Length > startIndex)
                 parsedPort = rawPort[startIndex..endIndex];
             else
-            {
                 throw new ArgumentException("Port is invalid. Check if port is exposed.");
-            }
         }
 
         /// <summary>
-        /// Executes the command, if the output of the command is null of empty, the default value is used to set the Environment Variable.
+        ///     Executes the command, if the output of the command is null of empty, the default value is used to set the
+        ///     Environment Variable.
         /// </summary>
         /// <param name="variable"></param>
         /// <param name="command"></param>
@@ -76,20 +77,22 @@ namespace MTCG.Docker
         {
             if (!string.IsNullOrEmpty(command))
             {
-                string value = ExecuteCommand(command);
+                var value = ExecuteCommand(command);
                 if (value != "") defaultValue = value;
             }
+
             Environment.SetEnvironmentVariable(variable, defaultValue);
         }
 
         /// <summary>
-        /// Executes the command in cmd.exe. Use it only under Windows. When an Exception is thrown, it ends the current process.
+        ///     Executes the command in cmd.exe. Use it only under Windows. When an Exception is thrown, it ends the current
+        ///     process.
         /// </summary>
         /// <param name="command"></param>
         /// <returns>Returns the output of the command, can be an empty string ""</returns>
         private static string ExecuteCommand(string command)
         {
-            ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command)
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
@@ -103,7 +106,7 @@ namespace MTCG.Docker
             {
                 // no need to call Close explicitly if using using-clause
                 // See: https://stackoverflow.com/a/33803135
-                using Process process = Process.Start(processInfo);
+                using var process = Process.Start(processInfo);
                 Debug.Assert(process != null, nameof(process) + " != null");
                 process.OutputDataReceived += (_, e) => envData += e.Data;
                 process.BeginOutputReadLine();
@@ -113,12 +116,8 @@ namespace MTCG.Docker
 
                 process.WaitForExit();
                 if (process.ExitCode != 0)
-                {
                     if (errorMsg != "")
-                    {
                         throw new Exception(errorMsg);
-                    }
-                }
             }
             catch (Exception e)
             {
@@ -127,6 +126,7 @@ namespace MTCG.Docker
 
                 throw;
             }
+
             return envData;
         }
     }

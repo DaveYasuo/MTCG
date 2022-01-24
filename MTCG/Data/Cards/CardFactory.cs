@@ -41,7 +41,7 @@ namespace MTCG.Data.Cards
             }
             catch (InvalidOperationException)
             {
-                Element element = card.GenerateElement();
+                var element = card.GenerateElement();
                 card.Name = element + card.Name;
                 return element;
             }
@@ -49,8 +49,8 @@ namespace MTCG.Data.Cards
 
         private static ICard SpellCard(Card card)
         {
-            List<ISpecialty> specialties = new List<ISpecialty>();
-            Element element = card.GetCardElement();
+            var specialties = new List<ISpecialty>();
+            var element = card.GetCardElement();
             switch (element)
             {
                 case Element.Water:
@@ -72,15 +72,16 @@ namespace MTCG.Data.Cards
                     TraceLogger.Instance.WriteLine("new SpellCard does not have any specialties.");
                     break;
             }
+
             return new SpellCard(card.Name, card.Damage, element, specialties);
         }
 
         private static ICard MonsterCard(Card card)
         {
-            MonsterType monsterType = card.GetMonsterType();
-            Element element = card.GetCardElement();
+            var monsterType = card.GetMonsterType();
+            var element = card.GetCardElement();
             // Add special effects
-            List<ISpecialty> specialties = new List<ISpecialty>();
+            var specialties = new List<ISpecialty>();
             switch (monsterType)
             {
                 case MonsterType.Goblin:
@@ -110,11 +111,12 @@ namespace MTCG.Data.Cards
                     TraceLogger.Instance.WriteLine("new MonsterType does not have any specialties.");
                     break;
             }
+
             return new MonsterCard(card.Name, card.Damage, monsterType, element, specialties);
         }
 
         /// <summary>
-        /// Generic method for getting an enum from a string
+        ///     Generic method for getting an enum from a string
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="value"></param>
@@ -127,7 +129,6 @@ namespace MTCG.Data.Cards
             // And: https://stackoverflow.com/a/41839209
             Enum.TryParse(Enum.GetNames(typeof(T)).Single(value.Contains), false, out T result);
             return result;
-
         }
     }
 }

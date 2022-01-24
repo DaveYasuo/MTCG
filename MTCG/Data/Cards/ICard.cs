@@ -1,6 +1,6 @@
-﻿using MTCG.Data.Cards.Types;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MTCG.Data.Cards.Specialties;
+using MTCG.Data.Cards.Types;
 
 namespace MTCG.Data.Cards
 {
@@ -8,7 +8,9 @@ namespace MTCG.Data.Cards
     {
         public string Name { get; }
         public float Damage { get; }
+
         public Element Element { get; }
+
         // Using IEnumerable
         // See: https://stackoverflow.com/a/30646094
         public IEnumerable<ISpecialty> Specialties { get; }

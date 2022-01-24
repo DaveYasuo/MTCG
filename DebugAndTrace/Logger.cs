@@ -7,6 +7,7 @@ namespace DebugAndTrace
     {
         void WriteLine(object text);
     }
+
     // Singleton-pattern
     // See: "https://de.wikipedia.org/wiki/Liste_von_Singleton-Implementierungen#Implementierung_in_C#"
     // Somewhat of a Factory pattern? 
@@ -25,6 +26,7 @@ namespace DebugAndTrace
             };
         }
     }
+
     public class DebugLogger : ILogger
     {
         public static readonly DebugLogger Instance = new();
@@ -33,6 +35,7 @@ namespace DebugAndTrace
         {
             Debug.WriteLine("Using Debug Printer");
         }
+
         public void WriteLine(object text)
         {
             Debug.Indent();
@@ -40,6 +43,7 @@ namespace DebugAndTrace
             Debug.Unindent();
         }
     }
+
     public class ConsoleLogger : ILogger
     {
         public static readonly ConsoleLogger Instance = new();
@@ -48,11 +52,13 @@ namespace DebugAndTrace
         {
             Debug.WriteLine("Using Console Printer");
         }
+
         public void WriteLine(object text)
         {
             Console.WriteLine(text);
         }
     }
+
     public class TraceLogger : ILogger
     {
         public static readonly TraceLogger Instance = new();
@@ -61,6 +67,7 @@ namespace DebugAndTrace
         {
             Debug.WriteLine("Using Trace Printer");
         }
+
         public void WriteLine(object text)
         {
             Trace.WriteLine(text);

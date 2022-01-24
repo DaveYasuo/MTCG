@@ -2,11 +2,6 @@
 {
     public class BattleResult
     {
-        public bool Draw { get; }
-        public string Winner { get; }
-        public string Loser { get; }
-
-
         public BattleResult()
         {
             Draw = true;
@@ -18,5 +13,9 @@
             Winner = winner;
             Loser = loser;
         }
+
+        public bool Draw { get; }
+        public string Winner { get; }
+        public string Loser { get; }
     }
 }

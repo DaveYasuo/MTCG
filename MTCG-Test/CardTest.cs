@@ -13,8 +13,6 @@ namespace MTCG_Test
     [TestFixture]
     public class CardTests
     {
- 
-
         [Test]
         public void CreateDragonWithRandomElement()
         {
@@ -66,7 +64,8 @@ namespace MTCG_Test
         [TestCase("WoodDragon", Element.Wood)]
         [TestCase("EarthDragon", Element.Earth)]
         [TestCase("RegularDragon", Element.Regular)]
-        public void TestAllElementsOfDragonCardWithEvadedByFireElfSpecialty(string monsterCardName, Element expectedElement)
+        public void TestAllElementsOfDragonCardWithEvadedByFireElfSpecialty(string monsterCardName,
+            Element expectedElement)
         {
             CreateSpecificMonsterCard<EvadedByFireElf>(monsterCardName, expectedElement, MonsterType.Dragon);
         }
@@ -78,7 +77,8 @@ namespace MTCG_Test
         [TestCase("WoodKnight", Element.Wood)]
         [TestCase("EarthKnight", Element.Earth)]
         [TestCase("RegularKnight", Element.Regular)]
-        public void TestAllElementsOfKnightCardWithDrownByWaterSpellSpecialty(string monsterCardName, Element expectedElement)
+        public void TestAllElementsOfKnightCardWithDrownByWaterSpellSpecialty(string monsterCardName,
+            Element expectedElement)
         {
             CreateSpecificMonsterCard<DrownByWaterSpell>(monsterCardName, expectedElement, MonsterType.Knight);
         }
@@ -102,7 +102,8 @@ namespace MTCG_Test
         [TestCase("WoodGoblin", Element.Wood)]
         [TestCase("EarthGoblin", Element.Earth)]
         [TestCase("RegularGoblin", Element.Regular)]
-        public void TestAllElementsOfGoblinCardWithAfraidOfDragonsSpecialty(string monsterCardName, Element expectedElement)
+        public void TestAllElementsOfGoblinCardWithAfraidOfDragonsSpecialty(string monsterCardName,
+            Element expectedElement)
         {
             CreateSpecificMonsterCard<AfraidOfDragons>(monsterCardName, expectedElement, MonsterType.Goblin);
         }
@@ -114,7 +115,8 @@ namespace MTCG_Test
         [TestCase("WoodKraken", Element.Wood)]
         [TestCase("EarthKraken", Element.Earth)]
         [TestCase("RegularKraken", Element.Regular)]
-        public void TestAllElementsOfKrakenCardWithImmunAgainstSpellsSpecialty(string monsterCardName, Element expectedElement)
+        public void TestAllElementsOfKrakenCardWithImmunAgainstSpellsSpecialty(string monsterCardName,
+            Element expectedElement)
         {
             CreateSpecificMonsterCard<ImmunAgainstSpells>(monsterCardName, expectedElement, MonsterType.Kraken);
         }
@@ -183,7 +185,7 @@ namespace MTCG_Test
             Assert.That(monsterCard.Specialties.OfType<T>().Any);
             Assert.Pass(monsterCardName + " passed build test.");
         }
- 
+
         private static void CreateSpecificMonsterCard(string monsterCardName, Element expectedElement,
             MonsterType expectedMonsterType)
         {

@@ -15,19 +15,17 @@ namespace MTCG.BattleLogic
     public class GameServer : IServer
     {
         private readonly ILogger _log;
-        private bool _running;
-        private CancellationTokenSource _tokenSource;
-        private readonly ConcurrentDictionary<string, Task> _tasks = new();
         private readonly ConcurrentQueue<IPlayer> _queue = new();
+        private readonly ConcurrentDictionary<string, Task> _tasks = new();
+        private bool _running;
         private Thread _serverThread;
+        private CancellationTokenSource _tokenSource;
 
         public GameServer(ILogger log)
         {
             _log = log;
             Start();
         }
-
-        ~GameServer() => Stop();
 
         public void Start()
         {
@@ -41,51 +39,6 @@ namespace MTCG.BattleLogic
             };
             _serverThread = new Thread(ServiceHandler);
             _serverThread.Start();
-        }
-
-        private void ServiceHandler()
-        {
-            while (_running)
-            {
-                try
-                {
-                    if (_queue.Count < 2)
-                    {
-                        Thread.Sleep(100);
-                        continue;
-                    }
-                    // Get players from queue
-                    IPlayer player1 = null, player2 = null;
-                    // if tryDequeue returns false, out playerA/B's value is default -> null
-                    while (player1 == null) _queue.TryDequeue(out player1);
-                    while (player2 == null) _queue.TryDequeue(out player2);
-
-                    CancellationToken token = _tokenSource.Token;
-                    string id = Guid.NewGuid().ToString();
-                    Task task = Task.Run(() => Game(player1, player2), token);
-                    _tasks[id] = task;
-                    // Remove task from collection when finished
-                    task.ContinueWith(t =>
-                    {
-                        if (t == null) return;
-                        _tasks.TryRemove(id, out t);
-                    }, token);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-        }
-
-        private static void Game(IPlayer player1, IPlayer player2)
-        {
-            Battle battle = new Battle(player1, player2);
-            battle.StartGame();
-            BattleResult result = battle.GetResult();
-            if (!DataHandler.UpdateGameResult(result, player1.Username, player2.Username)) return;
-            player1.InGame = false;
-            player2.InGame = false;
         }
 
         public void Stop()
@@ -107,9 +60,59 @@ namespace MTCG.BattleLogic
                     // Prevent TaskCanceledException
                 }
             }
+
             _tokenSource.Dispose();
             _tasks.Clear();
             _serverThread.Join();
+        }
+
+        ~GameServer()
+        {
+            Stop();
+        }
+
+        private void ServiceHandler()
+        {
+            while (_running)
+                try
+                {
+                    if (_queue.Count < 2)
+                    {
+                        Thread.Sleep(100);
+                        continue;
+                    }
+
+                    // Get players from queue
+                    IPlayer player1 = null, player2 = null;
+                    // if tryDequeue returns false, out playerA/B's value is default -> null
+                    while (player1 == null) _queue.TryDequeue(out player1);
+                    while (player2 == null) _queue.TryDequeue(out player2);
+
+                    var token = _tokenSource.Token;
+                    var id = Guid.NewGuid().ToString();
+                    var task = Task.Run(() => Game(player1, player2), token);
+                    _tasks[id] = task;
+                    // Remove task from collection when finished
+                    task.ContinueWith(t =>
+                    {
+                        if (t == null) return;
+                        _tasks.TryRemove(id, out t);
+                    }, token);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+        }
+
+        private static void Game(IPlayer player1, IPlayer player2)
+        {
+            var battle = new Battle(player1, player2);
+            battle.StartGame();
+            var result = battle.GetResult();
+            if (!DataHandler.UpdateGameResult(result, player1.Username, player2.Username)) return;
+            player1.InGame = false;
+            player2.InGame = false;
         }
 
         private void QueuePlayer(IPlayer player)
@@ -120,7 +123,7 @@ namespace MTCG.BattleLogic
 
         public List<object> Play(string username, List<Card> rawCards)
         {
-            List<ICard> cards = rawCards.ConvertAll(CardFactory.BuildCard);
+            var cards = rawCards.ConvertAll(CardFactory.BuildCard);
             IPlayer player = new Player(username, cards);
             QueuePlayer(player);
             return GetResult(player);
@@ -129,12 +132,10 @@ namespace MTCG.BattleLogic
         private static List<object> GetResult(IPlayer player)
         {
             while (player.InGame)
-            {
                 // Trying to understand if task.delay or thread.sleep should be used
                 // See: https://stackoverflow.com/questions/34052381/thread-sleep2500-vs-task-delay2500-wait
                 // Seems thread.sleep(1) is similar to task.delay(1).wait() in my case
                 Thread.Sleep(1000);
-            }
             return player.Log;
         }
     }

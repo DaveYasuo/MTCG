@@ -5,10 +5,13 @@ namespace MTCG.Database.Schemas
 {
     public class Credentials
     {
-        public string Token { get; }
-        public string Username { get; }
-        public string Password { get; }
-        public Role Role { get; }
+        // Conversion performance
+        // See: https://stackoverflow.com/a/38711
+        private static readonly Dictionary<string, Role> Roles = new()
+        {
+            { "User", Role.User },
+            { "Admin", Role.Admin }
+        };
 
 
         public Credentials(string token, string username, string password, string role)
@@ -16,7 +19,7 @@ namespace MTCG.Database.Schemas
             Token = token;
             Username = username;
             Password = password;
-            Roles.TryGetValue(role, out Role value);
+            Roles.TryGetValue(role, out var value);
             Role = value;
         }
 
@@ -28,13 +31,9 @@ namespace MTCG.Database.Schemas
             Role = role;
         }
 
-
-        // Conversion performance
-        // See: https://stackoverflow.com/a/38711
-        private static readonly Dictionary<string, Role> Roles = new()
-        {
-            { "User", Role.User },
-            { "Admin", Role.Admin }
-        };
+        public string Token { get; }
+        public string Username { get; }
+        public string Password { get; }
+        public Role Role { get; }
     }
 }

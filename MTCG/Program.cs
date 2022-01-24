@@ -2,8 +2,8 @@
 using MTCG.Handler.RequestHandling;
 using MTCG.Securities;
 using ServerModule.Requests;
-using ServerModule.Tcp;
 using ServerModule.Security;
+using ServerModule.Tcp;
 using ServerModule.Utility;
 
 namespace MTCG
@@ -28,7 +28,7 @@ namespace MTCG
             DependencyService.Register<IRequestHandler, RequestHandler>();
 
             // Start Server
-            TcpServer server = new TcpServer(10001);
+            var server = new TcpServer(10001);
             server.Start();
         }
     }

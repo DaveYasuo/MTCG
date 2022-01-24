@@ -2,13 +2,8 @@
 {
     public class ProfileData : IProfileData
     {
-        public string Username { get; }
-        public string Name { get; }
-        public string Bio { get; }
-        public string Image { get; }
-
         /// <summary>
-        /// Use this ctor for getting profile data from database.
+        ///     Use this ctor for getting profile data from database.
         /// </summary>
         /// <param name="username"></param>
         /// <param name="name"></param>
@@ -22,5 +17,9 @@
             Image = image;
         }
 
+        public string Username { get; }
+        public string Name { get; }
+        public string Bio { get; }
+        public string Image { get; }
     }
 }

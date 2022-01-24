@@ -5,11 +5,6 @@ namespace ServerModule.Mapping
 {
     public class RequestData
     {
-        public AuthToken Authentication { get; }
-        public string Payload { get; }
-        public string PathVariable { get; }
-        public Dictionary<string, string> RequestParam { get; }
-
         public RequestData(AuthToken authentication, string payload, string pathVariable, string requestParam)
         {
             RequestParam = SetRequestParameter(requestParam);
@@ -18,19 +13,25 @@ namespace ServerModule.Mapping
             Authentication = authentication;
         }
 
+        public AuthToken Authentication { get; }
+        public string Payload { get; }
+        public string PathVariable { get; }
+        public Dictionary<string, string> RequestParam { get; }
+
         private static Dictionary<string, string> SetRequestParameter(string requestParam)
         {
-            Dictionary<string, string> parameter = new Dictionary<string, string>();
+            var parameter = new Dictionary<string, string>();
             if (requestParam == null) return parameter;
-            string[] entries = requestParam.Split('&');
-            foreach (string entry in entries)
+            var entries = requestParam.Split('&');
+            foreach (var entry in entries)
             {
-                string[] tmp = entry.Split('=');
+                var tmp = entry.Split('=');
                 if (tmp.Length != 2) continue;
-                string key = tmp[0];
-                string val = tmp[1];
+                var key = tmp[0];
+                var val = tmp[1];
                 parameter.Add(key, val);
             }
+
             return parameter;
         }
     }

@@ -6,11 +6,6 @@ namespace MTCG.Data.Cards.Spell
 {
     public class SpellCard : ISpellCard
     {
-        public string Name { get; }
-        public float Damage { get; set; }
-        public Element Element { get; }
-        public IEnumerable<ISpecialty> Specialties { get; }
-
         public SpellCard(string name, float damage, Element element, IEnumerable<ISpecialty> specialties)
         {
             Name = name;
@@ -18,5 +13,10 @@ namespace MTCG.Data.Cards.Spell
             Element = element;
             Specialties = specialties;
         }
+
+        public string Name { get; }
+        public float Damage { get; set; }
+        public Element Element { get; }
+        public IEnumerable<ISpecialty> Specialties { get; }
     }
 }

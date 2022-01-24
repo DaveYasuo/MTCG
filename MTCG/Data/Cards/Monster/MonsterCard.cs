@@ -6,13 +6,8 @@ namespace MTCG.Data.Cards.Monster
 {
     public class MonsterCard : IMonsterCard
     {
-        public string Name { get; }
-        public float Damage { get; set; }
-        public MonsterType MonsterType { get; }
-        public Element Element { get; }
-        public IEnumerable<ISpecialty> Specialties { get; }
-
-        public MonsterCard(string name, float damage, MonsterType monsterType, Element element, IEnumerable<ISpecialty> specialties)
+        public MonsterCard(string name, float damage, MonsterType monsterType, Element element,
+            IEnumerable<ISpecialty> specialties)
         {
             Name = name;
             Damage = damage;
@@ -20,5 +15,11 @@ namespace MTCG.Data.Cards.Monster
             Element = element;
             Specialties = specialties;
         }
+
+        public string Name { get; }
+        public float Damage { get; set; }
+        public MonsterType MonsterType { get; }
+        public Element Element { get; }
+        public IEnumerable<ISpecialty> Specialties { get; }
     }
 }

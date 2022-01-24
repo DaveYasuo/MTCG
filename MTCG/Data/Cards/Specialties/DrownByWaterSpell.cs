@@ -6,7 +6,8 @@ namespace MTCG.Data.Cards.Specialties
 {
     public class DrownByWaterSpell : ISpecialty
     {
-        public void ApplyEffect(ICard card, ICard other, ref float myDamage, ref float otherDamage, in IBattleLog battleLog)
+        public void ApplyEffect(ICard card, ICard other, ref float myDamage, ref float otherDamage,
+            in IBattleLog battleLog)
         {
             if (other is not SpellCard { Element: Element.Water }) return;
             myDamage = 0;

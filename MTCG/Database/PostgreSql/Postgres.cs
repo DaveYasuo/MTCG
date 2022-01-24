@@ -10,19 +10,17 @@ namespace MTCG.Database.PostgreSql
     // See: https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/sealed
     public sealed class Postgres : IPostgres
     {
-        private NpgsqlConnection _connection;
-
-        public string ConnString { get; private set; }
+        private readonly string _database;
         private readonly string _host;
+        private readonly ILogger _log;
+        private readonly string _password;
         private readonly string _port;
         private readonly string _username;
-        private readonly string _password;
-        private readonly string _database;
-        private readonly ILogger _log;
+        private NpgsqlConnection _connection;
 
 
         /// <summary>
-        /// Default Constructor reads Credentials from Docker Environment Variables
+        ///     Default Constructor reads Credentials from Docker Environment Variables
         /// </summary>
         public Postgres(ILogger log, bool autoDrop = false)
         {
@@ -37,7 +35,8 @@ namespace MTCG.Database.PostgreSql
             CreateTablesIfNoExist();
         }
 
-        public Postgres(string host, string port, string username, string password, string database, ILogger log, bool autoDrop = false)
+        public Postgres(string host, string port, string username, string password, string database, ILogger log,
+            bool autoDrop = false)
         {
             _host = host;
             _port = port;
@@ -50,10 +49,7 @@ namespace MTCG.Database.PostgreSql
             CreateTablesIfNoExist();
         }
 
-        ~Postgres()
-        {
-            Dispose(false);
-        }
+        public string ConnString { get; private set; }
 
         public void Start()
         {
@@ -103,7 +99,29 @@ namespace MTCG.Database.PostgreSql
             {
                 _log.WriteLine(e.Message);
             }
+
             Dispose();
+        }
+
+        public void PrintVersion()
+        {
+            using var command = new NpgsqlCommand();
+            command.Connection = _connection;
+            const string sql = "SELECT version()";
+            command.CommandText = sql;
+            var version = command.ExecuteScalar()?.ToString();
+            _log.WriteLine($"PostgreSQL version: {version}");
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~Postgres()
+        {
+            Dispose(false);
         }
 
         private bool ContainsDb()
@@ -111,7 +129,8 @@ namespace MTCG.Database.PostgreSql
             // Check if database exists
             // See: https://stackoverflow.com/a/20032567/12347616
             // ReSharper disable once StringLiteralTypo
-            using NpgsqlCommand cmdCheck = new NpgsqlCommand($"SELECT 1 FROM pg_database WHERE datname='{_database}'", _connection);
+            using var cmdCheck =
+                new NpgsqlCommand($"SELECT 1 FROM pg_database WHERE datname='{_database}'", _connection);
             return cmdCheck.ExecuteScalar() != null;
         }
 
@@ -129,12 +148,12 @@ namespace MTCG.Database.PostgreSql
         {
             // Database does not exist; Create database and tables 
             // See: https://stackoverflow.com/a/17840078/12347616
-            using NpgsqlCommand cmd = new NpgsqlCommand($@"CREATE DATABASE {_database} ENCODING = 'UTF8'", _connection);
+            using var cmd = new NpgsqlCommand($@"CREATE DATABASE {_database} ENCODING = 'UTF8'", _connection);
             cmd.ExecuteNonQuery();
         }
 
         /// <summary>
-        /// Creates 5 tables: cards, credentials, packages, profile and store if non exists.
+        ///     Creates 5 tables: cards, credentials, packages, profile and store if non exists.
         /// </summary>
         private void CreateTablesIfNoExist()
         {
@@ -154,16 +173,6 @@ namespace MTCG.Database.PostgreSql
             CreateStore();
             // Add constraint foreign key later on
             AlterCards();
-        }
-
-        public void PrintVersion()
-        {
-            using NpgsqlCommand command = new NpgsqlCommand();
-            command.Connection = _connection;
-            const string sql = "SELECT version()";
-            command.CommandText = sql;
-            string version = command.ExecuteScalar()?.ToString();
-            _log.WriteLine($"PostgreSQL version: {version}");
         }
 
         private void CreateCredentials()
@@ -265,7 +274,7 @@ namespace MTCG.Database.PostgreSql
         }
 
         /// <summary>
-        /// Add store.id constraint to card.store if constraint doesn't exists
+        ///     Add store.id constraint to card.store if constraint doesn't exists
         /// </summary>
         private void AlterCards()
         {
@@ -276,7 +285,7 @@ namespace MTCG.Database.PostgreSql
             FROM information_schema.constraint_column_usage
             WHERE constraint_name = 'fk_store';
             ", _connection);
-            object result = selectCmd.ExecuteScalar();
+            var result = selectCmd.ExecuteScalar();
             if (result == null) return;
             if ((long)result != 0) return;
             using var alterCommand = new NpgsqlCommand(@"
@@ -291,16 +300,7 @@ namespace MTCG.Database.PostgreSql
 
         private void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                _connection?.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            if (disposing) _connection?.Dispose();
         }
     }
 }

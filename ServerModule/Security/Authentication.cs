@@ -3,7 +3,7 @@
 namespace ServerModule.Security
 {
     /// <summary>
-    /// Wrapper Class for Security
+    ///     Wrapper Class for Security
     /// </summary>
     public class Authentication
     {
@@ -15,7 +15,7 @@ namespace ServerModule.Security
         }
 
         /// <summary>
-        /// Checks if the Request needs Authentication
+        ///     Checks if the Request needs Authentication
         /// </summary>
         /// <param name="method"></param>
         /// <param name="path"></param>
@@ -26,7 +26,7 @@ namespace ServerModule.Security
         }
 
         /// <summary>
-        /// Checks if User is logged in
+        ///     Checks if User is logged in
         /// </summary>
         /// <param name="type"></param>
         /// <param name="token"></param>
@@ -38,7 +38,7 @@ namespace ServerModule.Security
         }
 
         /// <summary>
-        /// Registering User
+        ///     Registering User
         /// </summary>
         /// <param name="user"></param>
         /// <returns>True on success, else false.</returns>
@@ -48,7 +48,7 @@ namespace ServerModule.Security
         }
 
         /// <summary>
-        /// Check if user is registered.
+        ///     Check if user is registered.
         /// </summary>
         /// <param name="user"></param>
         /// <returns>Returns the generated authentication token or else null</returns>

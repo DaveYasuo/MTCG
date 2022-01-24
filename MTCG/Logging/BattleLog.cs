@@ -8,9 +8,8 @@ namespace MTCG.Logging
     {
         private readonly IPlayer _player1;
         private readonly IPlayer _player2;
-        public List<object> LogList { get; }
-        private string _winner;
         private CardLog _log;
+        private string _winner;
 
         public BattleLog(IPlayer player1, IPlayer player2)
         {
@@ -19,19 +18,18 @@ namespace MTCG.Logging
             LogList = new List<object>();
         }
 
-        /// <summary>
-        /// Wrapper for adding to the Log
-        /// </summary>
-        /// <param name="message"></param>
-        private void Add(object message) => LogList.Add(message);
+        public List<object> LogList { get; }
 
         /// <summary>
-        /// Adds an intro to the LogList.
+        ///     Adds an intro to the LogList.
         /// </summary>
-        public void AddStartInfo() => Add($"Player {_player1.Username} VS Player {_player2.Username}");
+        public void AddStartInfo()
+        {
+            Add($"Player {_player1.Username} VS Player {_player2.Username}");
+        }
 
         /// <summary>
-        /// Creates a new CardLog and log base damages to it.
+        ///     Creates a new CardLog and log base damages to it.
         /// </summary>
         /// <param name="myDamage"></param>
         /// <param name="otherDamage"></param>
@@ -44,7 +42,7 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Adds elemental advantages to the existing CardLog.
+        ///     Adds elemental advantages to the existing CardLog.
         /// </summary>
         /// <param name="myElement"></param>
         /// <param name="otherElement"></param>
@@ -55,7 +53,7 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Add the specific specialty information as a string to the CardLog in the description section.
+        ///     Add the specific specialty information as a string to the CardLog in the description section.
         /// </summary>
         /// <param name="infoMessage"></param>
         public void AddEffectInfo(string infoMessage)
@@ -64,14 +62,13 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Adds the resulting damages to the CardLog.
+        ///     Adds the resulting damages to the CardLog.
         /// </summary>
         /// <param name="myDamage"></param>
         /// <param name="otherDamage"></param>
         public void AddEffectiveDamage(float myDamage, float otherDamage)
         {
             _log.Effective = myDamage + " VS " + otherDamage;
-
         }
 
         public void AddBonusDamage(int bonusDmg1, int bonusDmg2)
@@ -81,7 +78,7 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Creates a new RoundLog object and adds it to the LogList.
+        ///     Creates a new RoundLog object and adds it to the LogList.
         /// </summary>
         /// <param name="damage1"></param>
         /// <param name="damage2"></param>
@@ -94,7 +91,7 @@ namespace MTCG.Logging
                 < 0 => _player2.Username,
                 _ => null
             };
-            RoundLog roundLog = new RoundLog
+            var roundLog = new RoundLog
             {
                 Round = round,
                 Title = $"{_player1.LastPlayedCard} VS {_player2.LastPlayedCard}",
@@ -110,7 +107,27 @@ namespace MTCG.Logging
         }
 
         /// <summary>
-        /// Adds the battle result to the LogList and then to the player's log.
+        ///     Gets the current BattleLog and the results.
+        /// </summary>
+        /// <returns>A BattleResult object containing the battle results.</returns>
+        public BattleResult GetResult()
+        {
+            return _winner == null
+                ? new BattleResult()
+                : new BattleResult(_winner, _winner == _player1.Username ? _player2.Username : _player1.Username);
+        }
+
+        /// <summary>
+        ///     Wrapper for adding to the Log
+        /// </summary>
+        /// <param name="message"></param>
+        private void Add(object message)
+        {
+            LogList.Add(message);
+        }
+
+        /// <summary>
+        ///     Adds the battle result to the LogList and then to the player's log.
         /// </summary>
         private void AddResult()
         {
@@ -118,11 +135,5 @@ namespace MTCG.Logging
             _player1.Log.AddRange(LogList);
             _player2.Log.AddRange(LogList);
         }
-
-        /// <summary>
-        /// Gets the current BattleLog and the results.
-        /// </summary>
-        /// <returns>A BattleResult object containing the battle results.</returns>
-        public BattleResult GetResult() => _winner == null ? new BattleResult() : new BattleResult(_winner, _winner == _player1.Username ? _player2.Username : _player1.Username);
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System.Net;
 using ServerModule.Tcp.Client;
-using TcpClient = ServerModule.Tcp.Client.TcpClient;
 
 namespace ServerModule.Tcp.Listener
 {
     /// <summary>
-    /// Wrapper Class for the TcpListener
+    ///     Wrapper Class for the TcpListener
     /// </summary>
-    /// <inheritdoc cref="ITcpListener"/>
+    /// <inheritdoc cref="ITcpListener" />
     public class TcpListener : ITcpListener
     {
         private readonly System.Net.Sockets.TcpListener _server;

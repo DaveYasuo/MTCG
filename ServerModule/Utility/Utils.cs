@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using DebugAndTrace;
@@ -34,6 +33,7 @@ namespace ServerModule.Utility
     public static class Utils
     {
         private static readonly ILogger Log = Logger.GetPrinter(Printer.Debug);
+
         private static readonly Dictionary<Char, char> Characters = new()
         {
             { Char.WhiteSpace, ' ' },
@@ -47,14 +47,14 @@ namespace ServerModule.Utility
         };
 
         /// <summary>
-        /// Get the character with the given Enum key.
+        ///     Get the character with the given Enum key.
         /// </summary>
         /// <param name="key"></param>
         /// <returns>Returns the corresponding character</returns>
         public static char GetChar(Char key)
         {
             // See: https://www.dotnetperls.com/static-dictionary
-            Characters.TryGetValue(key, out char value);
+            Characters.TryGetValue(key, out var value);
             return value;
         }
 
@@ -89,16 +89,13 @@ namespace ServerModule.Utility
                 var obj = Activator.CreateInstance(type);
                 foreach (var kv in dict)
                 {
-                    PropertyInfo prop = type.GetProperty(kv.Key);
+                    var prop = type.GetProperty(kv.Key);
                     if (prop == null) continue;
-                    Type propType = prop.PropertyType;
-                    object value = kv.Value;
+                    var propType = prop.PropertyType;
+                    var value = kv.Value;
                     if (value is Dictionary<string, object> dictionary)
-                    {
                         value = GetObject(dictionary, prop.PropertyType);
-                    }
                     if (value is JsonElement rawValue)
-                    {
                         switch (rawValue.ValueKind)
                         {
                             case JsonValueKind.String:
@@ -108,12 +105,10 @@ namespace ServerModule.Utility
                                 value = Convert.ToInt32(value);
                                 break;
                         }
-                    }
-                    if (value != null && propType == value.GetType())
-                    {
-                        prop.SetValue(obj, value, null);
-                    }
+
+                    if (value != null && propType == value.GetType()) prop.SetValue(obj, value, null);
                 }
+
                 return obj;
             }
             catch (Exception e)
@@ -129,7 +124,7 @@ namespace ServerModule.Utility
         }
 
         /// <summary>
-        /// Add all property names with the corresponding value into a string.
+        ///     Add all property names with the corresponding value into a string.
         /// </summary>
         /// <param name="myObj"></param>
         /// <returns>Returns the string with the values or "" if the object is empty/null</returns>
@@ -137,11 +132,9 @@ namespace ServerModule.Utility
         {
             // Using reflection
             // See: https://stackoverflow.com/a/19823887
-            StringBuilder stringBuilder = new StringBuilder();
-            foreach (PropertyInfo prop in myObj.GetType().GetProperties())
-            {
+            var stringBuilder = new StringBuilder();
+            foreach (var prop in myObj.GetType().GetProperties())
                 stringBuilder.AppendLine(prop.Name + ": " + prop.GetValue(myObj, null));
-            }
             return stringBuilder.ToString();
         }
     }

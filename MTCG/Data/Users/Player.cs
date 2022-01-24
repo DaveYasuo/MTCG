@@ -4,23 +4,33 @@ using MTCG.Data.Cards;
 
 namespace MTCG.Data.Users
 {
-    /// <inheritdoc cref="IPlayer"/>
+    /// <inheritdoc cref="IPlayer" />
     public class Player : IPlayer
     {
+        private readonly Random _rnd;
+
+        public Player(string username, List<ICard> cards, bool inGame = false)
+        {
+            Username = username;
+            Cards = cards;
+            Log = new List<object>();
+            InGame = inGame;
+            _rnd = new Random();
+        }
+
         public string Username { get; }
         public List<ICard> Cards { get; }
         public List<object> Log { get; set; }
         public bool InGame { get; set; }
+
         /// <summary>
-        /// Gets the name of the last played card
+        ///     Gets the name of the last played card
         /// </summary>
         public string LastPlayedCard { get; set; }
 
-        private readonly Random _rnd;
-
         public ICard GetRandomCard()
         {
-            ICard card = GenerateRandomCard();
+            var card = GenerateRandomCard();
             LastPlayedCard = card.Name;
             return card;
         }
@@ -33,15 +43,6 @@ namespace MTCG.Data.Users
         public void Remove(ICard card)
         {
             Cards.Remove(card);
-        }
-
-        public Player(string username, List<ICard> cards, bool inGame = false)
-        {
-            Username = username;
-            Cards = cards;
-            Log = new List<object>();
-            InGame = inGame;
-            _rnd = new Random();
         }
 
         private ICard GenerateRandomCard()

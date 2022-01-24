@@ -8,13 +8,13 @@ namespace MTCG_Test
     [TestFixture]
     public class GameServerTest
     {
-        private GameServer _server;
-
         [SetUp]
         public void SetUp()
         {
             _server = new GameServer(new Mock<ILogger>().Object);
         }
+
+        private GameServer _server;
 
         [Test]
         public void ServerStartStopTest()

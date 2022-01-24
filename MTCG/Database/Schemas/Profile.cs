@@ -4,18 +4,8 @@ namespace MTCG.Database.Schemas
 {
     public class Profile : IProfileData, IStats
     {
-        public string Username { get; }
-        public string Name { get; }
-        public string Bio { get; }
-        public string Image { get; }
-        public short Elo { get; }
-        public int Wins { get; }
-        public int Losses { get; }
-        public int Draws { get; }
-        public long Coins { get; }
-
         /// <summary>
-        /// Use this ctor for generating new profile for database insertion
+        ///     Use this ctor for generating new profile for database insertion
         /// </summary>
         /// <param name="username"></param>
         public Profile(string username)
@@ -32,7 +22,7 @@ namespace MTCG.Database.Schemas
         }
 
         /// <summary>
-        /// Use this ctor for getting all data from profile table
+        ///     Use this ctor for getting all data from profile table
         /// </summary>
         /// <param name="username"></param>
         /// <param name="name"></param>
@@ -43,7 +33,8 @@ namespace MTCG.Database.Schemas
         /// <param name="losses"></param>
         /// <param name="draws"></param>
         /// <param name="coins"></param>
-        public Profile(string username, string name, string bio, string image, short elo, int wins, int losses, int draws, long coins)
+        public Profile(string username, string name, string bio, string image, short elo, int wins, int losses,
+            int draws, long coins)
         {
             Username = username;
             Name = name;
@@ -55,5 +46,15 @@ namespace MTCG.Database.Schemas
             Draws = draws;
             Coins = coins;
         }
+
+        public long Coins { get; }
+        public string Username { get; }
+        public string Name { get; }
+        public string Bio { get; }
+        public string Image { get; }
+        public short Elo { get; }
+        public int Wins { get; }
+        public int Losses { get; }
+        public int Draws { get; }
     }
 }

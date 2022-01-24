@@ -7,12 +7,6 @@ namespace ServerModule.Responses
 {
     public class Response
     {
-        public bool ContainsBody { get; }
-
-        public int StatusCode { get; }
-        public string StatusName { get; }
-        public string Payload { get; }
-        public string ContentType { get; }
         public Dictionary<string, string> Headers;
 
         private Response(int status, Dictionary<string, string> headers = null)
@@ -41,8 +35,15 @@ namespace ServerModule.Responses
             Headers = headers;
         }
 
+        public bool ContainsBody { get; }
+
+        public int StatusCode { get; }
+        public string StatusName { get; }
+        public string Payload { get; }
+        public string ContentType { get; }
+
         /// <summary>
-        /// Returns a new response instance with no content, but can have additional headers.
+        ///     Returns a new response instance with no content, but can have additional headers.
         /// </summary>
         /// <param name="status"></param>
         /// <param name="headers"></param>
@@ -53,7 +54,7 @@ namespace ServerModule.Responses
         }
 
         /// <summary>
-        /// Returns a new response instance with no content, but can have additional headers.
+        ///     Returns a new response instance with no content, but can have additional headers.
         /// </summary>
         /// <param name="status"></param>
         /// <param name="headers"></param>
@@ -64,13 +65,18 @@ namespace ServerModule.Responses
         }
 
         /// <summary>
-        /// Returns a new response instance that converts payload object to JSON string and default status code 200 which can be overwritten.
+        ///     Returns a new response instance that converts payload object to JSON string and default status code 200 which can
+        ///     be overwritten.
         /// </summary>
         /// <param name="payload"></param>
         /// <param name="status"></param>
         /// <param name="headers"></param>
-        /// <returns>Returns a new response instance with JSON as payload and the given status code on success, else if an exception is thrown, internal server error.</returns>
-        public static Response Json(object payload, Status status = Responses.Status.Ok, Dictionary<string, string> headers = null)
+        /// <returns>
+        ///     Returns a new response instance with JSON as payload and the given status code on success, else if an
+        ///     exception is thrown, internal server error.
+        /// </returns>
+        public static Response Json(object payload, Status status = Responses.Status.Ok,
+            Dictionary<string, string> headers = null)
         {
             string json;
             try
@@ -81,17 +87,20 @@ namespace ServerModule.Responses
             {
                 return new Response(Responses.Status.InternalServerError);
             }
+
             return new Response(json, "application/json", status, headers);
         }
 
         /// <summary>
-        /// Returns a new response instance with utf-8 plaintext as payload and default status code 200 which can be overwritten.
+        ///     Returns a new response instance with utf-8 plaintext as payload and default status code 200 which can be
+        ///     overwritten.
         /// </summary>
         /// <param name="plainText"></param>
         /// <param name="status"></param>
         /// <param name="headers"></param>
         /// <returns>Returns a new response instance with utf-8 plaintext as payload and the given status code.</returns>
-        public static Response PlainText(string plainText, Status status = Responses.Status.Ok, Dictionary<string, string> headers = null)
+        public static Response PlainText(string plainText, Status status = Responses.Status.Ok,
+            Dictionary<string, string> headers = null)
         {
             return new Response(plainText, "text/plain; charset=utf-8", status, headers);
         }

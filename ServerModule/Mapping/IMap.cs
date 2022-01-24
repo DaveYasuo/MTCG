@@ -7,7 +7,7 @@ namespace ServerModule.Mapping
     public interface IMap
     {
         /// <summary>
-        /// Checks if routing path exists.
+        ///     Checks if routing path exists.
         /// </summary>
         /// <param name="method"></param>
         /// <param name="path"></param>
@@ -15,7 +15,7 @@ namespace ServerModule.Mapping
         bool Contains(Method method, string path);
 
         /// <summary>
-        /// Invokes the method for the corresponding method and path.
+        ///     Invokes the method for the corresponding method and path.
         /// </summary>
         /// <param name="method"></param>
         /// <param name="path"></param>
@@ -24,6 +24,7 @@ namespace ServerModule.Mapping
         /// <param name="pathVariable"></param>
         /// <param name="requestParam"></param>
         /// <returns>Returns a Response object</returns>
-        Response InvokeMethod(Method method, string path, AuthToken token, string payload, string pathVariable, string requestParam);
+        Response InvokeMethod(Method method, string path, AuthToken token, string payload, string pathVariable,
+            string requestParam);
     }
 }

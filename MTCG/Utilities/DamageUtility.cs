@@ -1,6 +1,5 @@
 ﻿using System;
 using MTCG.Data.Cards;
-using MTCG.Data.Cards.Specialties;
 using MTCG.Data.Cards.Spell;
 using MTCG.Data.Cards.Types;
 using MTCG.Logging;
@@ -13,7 +12,7 @@ namespace MTCG.Utilities
         private static readonly Random Rnd = new();
 
         /// <summary>
-        /// Calculates damage for both cards and add logs.
+        ///     Calculates damage for both cards and add logs.
         /// </summary>
         /// <param name="card"></param>
         /// <param name="other"></param>
@@ -24,23 +23,27 @@ namespace MTCG.Utilities
             // default damages
             float myDamage = card.Damage, otherDamage = other.Damage;
             battleLog.AddBaseDamage(myDamage, otherDamage);
-            if (card is SpellCard || other is SpellCard) card.ApplySpellEffect(other, ref myDamage, ref otherDamage, in battleLog);
+            if (card is SpellCard || other is SpellCard)
+                card.ApplySpellEffect(other, ref myDamage, ref otherDamage, in battleLog);
             // player1
-            foreach (ISpecialty specialty in card.Specialties) specialty.ApplyEffect(card, other, ref myDamage, ref otherDamage, in battleLog);
+            foreach (var specialty in card.Specialties)
+                specialty.ApplyEffect(card, other, ref myDamage, ref otherDamage, in battleLog);
             // player2
-            foreach (ISpecialty specialty in other.Specialties) specialty.ApplyEffect(other, card, ref otherDamage, ref myDamage, in battleLog);
+            foreach (var specialty in other.Specialties)
+                specialty.ApplyEffect(other, card, ref otherDamage, ref myDamage, in battleLog);
             return (myDamage, otherDamage);
         }
 
         /// <summary>
-        /// Calculates elemental damages and log it to the battle log.
+        ///     Calculates elemental damages and log it to the battle log.
         /// </summary>
         /// <param name="card"></param>
         /// <param name="other"></param>
         /// <param name="myDamage"></param>
         /// <param name="otherDamage"></param>
         /// <param name="battleLog"></param>
-        private static void ApplySpellEffect(this ICard card, ICard other, ref float myDamage, ref float otherDamage, in IBattleLog battleLog)
+        private static void ApplySpellEffect(this ICard card, ICard other, ref float myDamage, ref float otherDamage,
+            in IBattleLog battleLog)
         {
             if (card.Element == other.Element) return;
             switch (card.Element)
@@ -75,7 +78,7 @@ namespace MTCG.Utilities
         }
 
         /// <summary>
-        /// Multiply first argument by factor and divide second argument by factor
+        ///     Multiply first argument by factor and divide second argument by factor
         /// </summary>
         /// <param name="multiply"></param>
         /// <param name="divide"></param>
@@ -87,7 +90,7 @@ namespace MTCG.Utilities
         }
 
         /// <summary>
-        /// Get a random Element of the Element Enum.
+        ///     Get a random Element of the Element Enum.
         /// </summary>
         /// <param name="card"></param>
         /// <returns>A random Element which is part of the Enum Element.</returns>
@@ -95,7 +98,7 @@ namespace MTCG.Utilities
         {
             // Get Random Enum
             // See: https://stackoverflow.com/a/3132151
-            Array values = Enum.GetValues(typeof(Element));
+            var values = Enum.GetValues(typeof(Element));
             // Null suppression
             // See: https://stackoverflow.com/a/54724546
             return (Element)values.GetValue(Rnd.Next(values.Length))!;
@@ -107,15 +110,15 @@ namespace MTCG.Utilities
         }
 
         /// <summary>
-        /// Both cards get additional random damage from 0 to 10.
+        ///     Both cards get additional random damage from 0 to 10.
         /// </summary>
         /// <param name="damage1"></param>
         /// <param name="damage2"></param>
         /// <param name="battleLog"></param>
         public static void BonusRound(ref float damage1, ref float damage2, in IBattleLog battleLog)
         {
-            int bonusDmg1 = GetRandomIntegerBetween(10);
-            int bonusDmg2 = GetRandomIntegerBetween(10);
+            var bonusDmg1 = GetRandomIntegerBetween(10);
+            var bonusDmg2 = GetRandomIntegerBetween(10);
             damage1 += bonusDmg1;
             damage2 += bonusDmg2;
             battleLog.AddBonusDamage(bonusDmg1, bonusDmg2);
