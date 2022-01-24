@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
 using MTCG.Data.Cards;
+using MTCG.Data.Cards.Monster;
 using MTCG.Data.Cards.Specialties;
+using MTCG.Data.Cards.Spell;
 using MTCG.Data.Cards.Types;
 using MTCG.Models;
 using NUnit.Framework;
