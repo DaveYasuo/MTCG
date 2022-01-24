@@ -1,6 +1,6 @@
 ﻿using MTCG.Data.Cards.Types;
 
-namespace MTCG.Data.Cards
+namespace MTCG.Data.Cards.Monster
 {
     public interface IMonsterCard : ICard
     {

@@ -1,4 +1,5 @@
-﻿using MTCG.Logging;
+﻿using MTCG.Data.Cards.Spell;
+using MTCG.Logging;
 
 namespace MTCG.Data.Cards.Specialties
 {

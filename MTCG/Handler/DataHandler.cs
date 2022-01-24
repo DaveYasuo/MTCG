@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using DebugAndTrace;
 using MTCG.BattleLogic;
-using MTCG.Data.Cards.Types;
 using MTCG.Database.PostgreSql;
 using MTCG.Database.Schemas;
 using Npgsql;
 using MTCG.Models;
-using NpgsqlTypes;
-using ServerModule.Responses;
 
 namespace MTCG.Handler
 {

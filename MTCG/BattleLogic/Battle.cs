@@ -25,8 +25,8 @@ namespace MTCG.BattleLogic
             {
                 ICard card1 = _player1.GetRandomCard();
                 ICard card2 = _player2.GetRandomCard();
-                (float damage1, float damage2) = Utility.CalculateDamage(card1, card2, in _battleLog);
-                if (round % 10 == 0) Utility.BonusRound(ref damage1, ref damage2, in _battleLog);
+                (float damage1, float damage2) = DamageUtility.CalculateDamage(card1, card2, in _battleLog);
+                if (round % 10 == 0) DamageUtility.BonusRound(ref damage1, ref damage2, in _battleLog);
                 _battleLog.AddEffectiveDamage(damage1, damage2);
                 switch (damage1.CompareTo(damage2))
                 {

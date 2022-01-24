@@ -1,23 +1,20 @@
 ﻿using System.Collections.Generic;
 using MTCG.Data.Cards.Specialties;
 using MTCG.Data.Cards.Types;
-using MTCG.Models;
 
-namespace MTCG.Data.Cards
+namespace MTCG.Data.Cards.Spell
 {
-    public class MonsterCard : IMonsterCard
+    public class SpellCard : ISpellCard
     {
         public string Name { get; }
         public float Damage { get; set; }
-        public MonsterType MonsterType { get; }
         public Element Element { get; }
         public IEnumerable<ISpecialty> Specialties { get; }
 
-        public MonsterCard(Card card, MonsterType monsterType, Element element, IEnumerable<ISpecialty> specialties)
+        public SpellCard(string name, float damage, Element element, IEnumerable<ISpecialty> specialties)
         {
-            Name = card.Name;
-            Damage = card.Damage;
-            MonsterType = monsterType;
+            Name = name;
+            Damage = damage;
             Element = element;
             Specialties = specialties;
         }

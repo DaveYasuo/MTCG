@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using DebugAndTrace;
+using MTCG.Data.Cards.Monster;
 using MTCG.Data.Cards.Specialties;
+using MTCG.Data.Cards.Spell;
 using MTCG.Data.Cards.Types;
 using MTCG.Models;
 using MTCG.Utilities;
@@ -70,7 +72,7 @@ namespace MTCG.Data.Cards
                     TraceLogger.Instance.WriteLine("new SpellCard does not have any specialties.");
                     break;
             }
-            return new SpellCard(card, element, specialties);
+            return new SpellCard(card.Name, card.Damage, element, specialties);
         }
 
         private static ICard MonsterCard(Card card)
@@ -108,7 +110,7 @@ namespace MTCG.Data.Cards
                     TraceLogger.Instance.WriteLine("new MonsterType does not have any specialties.");
                     break;
             }
-            return new MonsterCard(card, monsterType, element, specialties);
+            return new MonsterCard(card.Name, card.Damage, monsterType, element, specialties);
         }
 
         /// <summary>
