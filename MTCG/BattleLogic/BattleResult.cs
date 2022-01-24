@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace MTCG.BattleLogic
+﻿namespace MTCG.BattleLogic
 {
     public class BattleResult
     {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using MTCG.Data.Cards;
-using MTCG.Data.Cards.Types;
 using MTCG.Database.Schemas;
 using MTCG.Models;
 using ServerModule.Mapping;

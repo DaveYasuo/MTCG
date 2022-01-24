@@ -1,5 +1,4 @@
-﻿using System;
-using MTCG.Models;
+﻿using MTCG.Models;
 using ServerModule.Mapping;
 using ServerModule.Responses;
 

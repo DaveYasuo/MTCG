@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using DebugAndTrace;
+﻿using DebugAndTrace;
 using Moq;
 using MTCG.BattleLogic;
-using MTCG.Models;
 using NUnit.Framework;
 
 namespace MTCG_Test

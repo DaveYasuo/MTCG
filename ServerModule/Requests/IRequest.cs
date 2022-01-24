@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using ServerModule.Utility;
-using Char = ServerModule.Utility.Char;
 
 namespace ServerModule.Requests
 {

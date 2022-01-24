@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Text;
-using MTCG.Database.Schemas;
 using MTCG.Models;
 using ServerModule.Mapping;
 using ServerModule.Responses;
