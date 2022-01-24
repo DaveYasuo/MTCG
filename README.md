@@ -46,7 +46,7 @@ First problem was when testing response in Postman that all headers were in resp
 ### Unit tests
 Unit tests covered the battle functionality, the cards creation and all sort of damage calculation. Those tests were chosen since the Card-Game is the main functionality of this project.
 ### Integration tests with Postman
-Curl scripts test the integration of the database and the tcp-server. Provided by the exercise.
+Curl scripts test the integration of the database and the tcp-server. Provided by the [exercise](https://github.com/DaveYasuo/MTCG/blob/9acda0fddf887b4b4bf444f086dc2c1b0418ebc1/MonsterTradingCards.exercise.curl.bat).
 ## Collection Types
 - mostly used is the `Dictionary` for mapping (path,functions), headers, storing dependencies etc.
 - used `ConcurrentDictionary` for storing user sessions and tasks
@@ -56,6 +56,8 @@ Curl scripts test the integration of the database and the tcp-server. Provided b
 ## Time spent
 Overall for research, implementing and testing: 222 hours
 
+## Game Logic
+[See exercice](https://github.com/DaveYasuo/MTCG/blob/9acda0fddf887b4b4bf444f086dc2c1b0418ebc1/MonsterTradingCards_exercise.pdf)
 
 
 
