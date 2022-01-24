@@ -6,5 +6,6 @@ namespace MTCG.Database.PostgreSql
     public interface IPostgres : IServer, IDisposable
     {
         public void PrintVersion();
+        public void DropTable();
     }
 }
